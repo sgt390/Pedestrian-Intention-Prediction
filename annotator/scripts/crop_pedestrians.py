@@ -8,7 +8,7 @@ from pathlib import Path
 from tqdm import tqdm
 
 # ------- args ------- #
-root = '../dataset/all/' # todo fix this
+root = '../dataset/all/'  # todo fix this
 # in_filepath = sys.argv[1]
 # im_folderpath = sys.argv[2]
 # out_crop_folderpath = sys.argv[3]
@@ -35,11 +35,12 @@ def textfile_to_array(filename, dtype=float):
 
 
 def crop_pedestrians(df, root, im_folderpath, out_crop_folderpath, out_csv_filename=None, save=True):
-    if len(df[df["lifetime"] > min_lifetime_crossers])==0:
+    if len(df[df["lifetime"] > min_lifetime_crossers]) == 0:
         return None
     # prepare folders
     # delete folder if it exists
-    if os.path.exists(os.path.join(root, out_crop_folderpath)) and os.path.isdir(os.path.join(root, out_crop_folderpath)):
+    if os.path.exists(os.path.join(root, out_crop_folderpath)) and os.path.isdir(
+            os.path.join(root, out_crop_folderpath)):
         shutil.rmtree(os.path.join(root, out_crop_folderpath), ignore_errors=True)
     # create all folders
     if not os.path.exists(os.path.join(root, out_crop_folderpath)):
@@ -87,14 +88,16 @@ def crop_pedestrians(df, root, im_folderpath, out_crop_folderpath, out_csv_filen
 
             if row.cross == 1 and row.lifetime > min_lifetime_crossers:  # and row.incrossing == 0
                 crop = im[tly:round(row.tly + row.height), round(row.tlx):brx, :]
-                cv2.imwrite(os.path.join(root, out_crop_folderpath, str(row.id).zfill(10), str(t).zfill(10) + ".png"), crop)
+                cv2.imwrite(os.path.join(root, out_crop_folderpath, str(row.id).zfill(10), str(t).zfill(10) + ".png"),
+                            crop)
                 new_rows.append(row)
                 folderpaths = folderpaths + [os.path.join(Path(out_crop_folderpath), str(row.id).zfill(10))]
                 filepaths = filepaths + [str(t).zfill(10) + ".png"]
 
             if row.cross == 0 and row.lifetime > min_lifetime_noncrossers:  # and row.incrossing == 0
                 crop = im[tly:round(row.tly + row.height), round(row.tlx):brx, :]
-                cv2.imwrite(os.path.join(root, out_crop_folderpath, str(row.id).zfill(10), str(t).zfill(10) + ".png"), crop)
+                cv2.imwrite(os.path.join(root, out_crop_folderpath, str(row.id).zfill(10), str(t).zfill(10) + ".png"),
+                            crop)
                 new_rows.append(row)
                 folderpaths = folderpaths + [os.path.join(Path(out_crop_folderpath), str(row.id).zfill(10))]
                 filepaths = filepaths + [str(t).zfill(10) + ".png"]

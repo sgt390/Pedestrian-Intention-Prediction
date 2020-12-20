@@ -283,16 +283,17 @@ class JAADLoader(Dataset):
         pedestrian_filenames = []
         scenes_folderpaths = []
         scenes_filenames = []
-        for folderpath, filename in zip(df["folderpath"][-1 * self.max_obs_len:],
-                                        df["filename"][-1 * self.max_obs_len:]):
+        for folderpath, filename in zip(df["folderpath"][-1 * self.max_obs_len:], df["filename"][-1 * self.max_obs_len:]):
             pedestrian_images.append(Image.open(os.path.join(self.data_dir, folderpath, filename)))
             pedestrian_folderpaths.append(folderpath)
             pedestrian_filenames.append(filename)
-        for folderpath, filename in zip(df["scene_folderpath"][-1 * self.max_obs_len:],
-                                        df["scene_filename"][-1 * self.max_obs_len:]):
-            scenes_images.append(Image.open(os.path.join(self.data_dir, folderpath, filename)))
-            scenes_folderpaths.append(folderpath)
-            scenes_filenames.append(filename)
+
+        if 'scene_folderpath' in df:
+            for folderpath, filename in zip(df["scene_folderpath"][-1 * self.max_obs_len:], df["scene_filename"][-1 * self.max_obs_len:]):
+                if os.path.isfile(os.path.join(self.data_dir, folderpath, filename)):  # todo fix for scenes
+                    scenes_images.append(Image.open(os.path.join(self.data_dir, folderpath, filename)))
+                    scenes_folderpaths.append(folderpath)
+                    scenes_filenames.append(filename)
 
         # transform
         pedestrian_images = self.transform(pedestrian_images)
