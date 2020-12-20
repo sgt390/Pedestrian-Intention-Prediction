@@ -24,7 +24,7 @@ drawtrajectories = False
 def generate_groundtruth(in_xml_filename, in_video_name):
     foldername = in_video_name.split('.')[0]
     out_annotated_csv = in_xml_filename.split('.')[0] + '.txt'
-    df = jaad_to_pd(join(ALL_ROOT, RAW_XML), in_xml_filename, save=False)
+    df = jaad_to_pd(ALL_ROOT, join(RAW_XML, in_xml_filename), save=False)
     df = classify_trajectories(df, save=False)
     df = hungarian(df, 50, 60, save=False)
     df = crop_pedestrians(df, ALL_ROOT, join(RAW_VIDEOS, in_video_name), join(CROPS, foldername), save=False)
@@ -68,7 +68,19 @@ def split_dataset():
         shutil.move(join(ALL_ROOT, SCENES, f), join(VALIDATION, SCENES))
 
 
+def remove_folder(foldername):
+    if os.path.exists(foldername) and os.path.isdir(foldername):
+        shutil.rmtree(foldername, ignore_errors=True)
+    # create all folders
+    if not os.path.exists(foldername):
+        os.makedirs(foldername)
+
+
 if __name__ == '__main__':
+    remove_folder(os.path.join(ALL_ROOT, ANNOTATIONS))
+    remove_folder(os.path.join(ALL_ROOT, SCENES))
+    remove_folder(os.path.join(ALL_ROOT, CROPS))
+
     files_xml = os.listdir(join(ALL_ROOT, RAW_XML))
     files_video = os.listdir(join(ALL_ROOT, RAW_VIDEOS))
     for in_xml, in_video in zip(sorted(files_xml), sorted(files_video)):

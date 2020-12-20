@@ -7,32 +7,6 @@ from pathlib import Path
 
 from tqdm import tqdm
 
-# ------- args ------- #
-root = '../dataset/all/'  # todo fix this
-# in_filepath = sys.argv[1]
-# im_folderpath = sys.argv[2]
-# out_crop_folderpath = sys.argv[3]
-min_lifetime_noncrossers = 240
-min_lifetime_crossers = 60
-
-
-# ------- args ------- #
-
-# ------- utils ------- #
-def textfile_to_array(filename, dtype=float):
-    with open(filename) as file:
-        data = file.readlines()
-        data = [list(map(float, x.split(","))) for x in data]
-        data = np.array(data, dtype=dtype)
-    return data
-
-
-# ------- utils ------- #
-
-# ------- main ------- #
-# df = pd.read_csv(root+in_filepath)
-# # df = df.astype('int')
-
 
 def scenes(df, root, im_folderpath, out_scene_folderpath, out_csv_filename=None, save=True):
     # prepare folders

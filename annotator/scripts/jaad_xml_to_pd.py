@@ -1,20 +1,16 @@
+import shutil
 import xml.etree.ElementTree as ET
 import csv
 import pandas as pd
 import os
-from tqdm import tqdm
 from os.path import join
 
-frames = [
-    ['frame', 'id', 'tlx', 'tly', 'width', 'height', 'walking', 'standing', 'looking', 'incrossing']
-]
 
-
-def jaad_to_pd(dataset_path, in_file, save=False):
-    tree = ET.parse(os.path.join(dataset_path, in_file))
+def jaad_to_pd(dataset_path, in_xml, out_csv='', save=False):
+    tree = ET.parse(os.path.join(dataset_path, in_xml))
     root = tree.getroot()
-    out_file = in_file[0:-4] + '.csv'
-    for track in tqdm(root.iter('track')):
+    annotations = [['frame', 'id', 'tlx', 'tly', 'width', 'height', 'walking', 'standing', 'looking', 'incrossing']]
+    for track in root.iter('track'):
         if track.attrib['label'] != 'pedestrian':
             continue
 
@@ -44,9 +40,11 @@ def jaad_to_pd(dataset_path, in_file, save=False):
                         walking = 0
                 elif attribute.attrib['name'] == 'look':
                     looking = 1 if attribute.text == 'looking' else 0
-            frames.append([frame, identifier, tlx, tly, width, height, walking, standing, looking, incrossing])
+            annotations.append([frame, identifier, tlx, tly, width, height, walking, standing, looking, incrossing])
+
     if save:
-        with open(join(dataset_path, out_file), 'w', newline='') as f:
+        with open(join(dataset_path, out_csv), 'w', newline='') as f:
             writer = csv.writer(f)
-            writer.writerows(frames)
-    return pd.DataFrame(frames[1:], columns=frames[0], dtype=float)
+            writer.writerows(annotations)
+    return pd.DataFrame(annotations[1:], columns=annotations[0], dtype=float)
+
