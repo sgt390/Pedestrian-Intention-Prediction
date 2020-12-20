@@ -54,8 +54,8 @@ def classify_trajectories(df, save=False):
         if cross == 0:
             df.loc[df["id"] == i, "lifetime"] = df[df["id"] == i]["frame"].max() - df[df["id"] == i]["frame"].min()
         if cross == 1:
-            df.loc[df["id"] == i, "lifetime"] = df[(df["id"] == i) & (df["incrossing"] == 0)]["frame"].max() - \
-                                                df[(df["id"] == i) & (df["incrossing"] == 0)]["frame"].min()
+            x = df[(df["id"] == i) & (df["incrossing"] == 0)]["frame"]
+            df.loc[df["id"] == i, "lifetime"] = x.max() - x.min() if len(x)>0 else 0
     if save:
         df.to_csv(filename[0:-4] + '_trajectory' + ".txt", index=False)
     print("Done assigning labels to pedestrians")

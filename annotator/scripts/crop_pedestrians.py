@@ -12,8 +12,8 @@ root = '../dataset/all/' # todo fix this
 # in_filepath = sys.argv[1]
 # im_folderpath = sys.argv[2]
 # out_crop_folderpath = sys.argv[3]
-min_lifetime_noncrossers = 240
-min_lifetime_crossers = 60
+min_lifetime_noncrossers = 16  # 240
+min_lifetime_crossers = 16  # 60
 
 
 # ------- args ------- #
@@ -35,6 +35,8 @@ def textfile_to_array(filename, dtype=float):
 
 
 def crop_pedestrians(df, root, im_folderpath, out_crop_folderpath, out_csv_filename=None, save=True):
+    if len(df[df["lifetime"] > min_lifetime_crossers])==0:
+        return None
     # prepare folders
     # delete folder if it exists
     if os.path.exists(os.path.join(root, out_crop_folderpath)) and os.path.isdir(os.path.join(root, out_crop_folderpath)):
