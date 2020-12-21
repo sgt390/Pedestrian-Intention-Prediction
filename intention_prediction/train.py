@@ -76,7 +76,7 @@ def init_weights(m):
 
 def get_dtypes(args):
     long_dtype = torch.LongTensor
-    float_dtype = torch.Floattensor
+    float_dtype = torch.FloatTensor
     if args.use_gpu == 1:
         long_dtype = torch.cuda.LongTensor if torch.cuda.is_available() else torch.LongTensor
         float_dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
