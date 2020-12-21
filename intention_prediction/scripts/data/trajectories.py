@@ -297,9 +297,11 @@ class JAADLoader(Dataset):
 
         # transform
         pedestrian_images = self.transform(pedestrian_images)
-        scenes_images = self.transform(scenes_images)
         pedestrian_images = torch.stack(pedestrian_images, 0)
-        scenes_images = torch.stack(scenes_images, 0)
+        if len(scenes_images) > 0:
+            scenes_images = self.transform(scenes_images)  # TODO scene
+            scenes_images = torch.stack(scenes_images, 0)
+        else: scenes_images = torch.stack([], 0)
 
         return [pedestrian_images, standing[-1], looking[-1], walking[-1], crossing[-1], pedestrian_folderpaths, pedestrian_filenames, scenes_images, scenes_folderpaths, scenes_filenames]
     # -------------------------------
