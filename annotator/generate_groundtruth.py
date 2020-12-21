@@ -35,9 +35,9 @@ def generate_groundtruth(in_xml_filename, in_video_name):
 
 
 def split_dataset():
-    files = os.listdir(join(ALL_ROOT, ANNOTATIONS))
-    crops = os.listdir(join(ALL_ROOT, CROPS))
-    scenes = os.listdir(join(ALL_ROOT, SCENES))
+    files = sorted(os.listdir(join(ALL_ROOT, ANNOTATIONS)))
+    crops = sorted(os.listdir(join(ALL_ROOT, CROPS)))
+    scenes = sorted(os.listdir(join(ALL_ROOT, SCENES)))
     n_val = int(len(files) * VAL_SPLIT)
     train_files, val_files = files[n_val:], files[:n_val]
     train_crops, val_crops = crops[n_val:], crops[:n_val]
@@ -84,8 +84,8 @@ if __name__ == '__main__':
     remove_folder(os.path.join(ALL_ROOT, SCENES))
     remove_folder(os.path.join(ALL_ROOT, CROPS))
 
-    files_xml = os.listdir(join(ALL_ROOT, RAW_XML))
-    files_video = os.listdir(join(ALL_ROOT, RAW_VIDEOS))
+    files_xml = sorted(os.listdir(join(ALL_ROOT, RAW_XML)))
+    files_video = sorted(os.listdir(join(ALL_ROOT, RAW_VIDEOS)))
     for in_xml, in_video in zip(sorted(files_xml), sorted(files_video)):
         generate_groundtruth(in_xml, in_video)
     split_dataset()
