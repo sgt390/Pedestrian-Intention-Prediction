@@ -6,3 +6,5 @@ openh264-1.8.0-win64.dll
 report/auxil
 report/src/intention_prediction/models/
 images
+venv
+
