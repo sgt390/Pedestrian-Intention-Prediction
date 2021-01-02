@@ -61,11 +61,11 @@ class CNNLSTM1(nn.Module):
 
         # CNN Feature Extractor
         self.model = models.densenet201(pretrained=True)
-        outsize = self.model.fc.out_features
+        # outsize = self.model. fc.out_features
         self.model = nn.Sequential(self.model)  # *list(self.model.children())[0])
 
         # feature embedder
-        self.feature_embedder = nn.Linear(outsize, embedding_dim)# (1536, embedding_dim)
+        self.feature_embedder = nn.Linear(1000, embedding_dim)# (1536, embedding_dim)
 
         # LSTM
         self.lstm = nn.LSTM(embedding_dim, h_dim, 1, batch_first=False)
