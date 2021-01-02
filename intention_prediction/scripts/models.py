@@ -60,7 +60,7 @@ class CNNLSTM1(nn.Module):
         self.gradients = None
 
         # CNN Feature Extractor
-        self.model = models.wide_resnet50_2(pretrained=True)
+        self.model = models.googlenet(pretrained=True)
         outsize = self.model.fc.out_features
         self.model = nn.Sequential(self.model)  # *list(self.model.children())[0])
 
