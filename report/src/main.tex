@@ -13,15 +13,19 @@
 \date{\today}
 
 % Packages
+\usepackage{apacite}
 \usepackage{amsmath}
 \usepackage{hyperref}
+\usepackage{biblatex}
 
 % Document
 \begin{document}
 \maketitle
+
+
 \section{Introduction}
     We implemented the work of Haziq Razali, Alexandre Alah:
-    Pedestrian-Intention-Prediction\footnote{\url{https://github.com/lucyze/Pedestrian-Intention-Prediction}}.
+    Pedestrian-Intention-Prediction\cite{PedestrianIntentionPrediction}.
     The original work consists in a Convolutional Neural Network - LSTM, with the goal to predict the intention
     of pedestrians on crossing the road.\\
     The model was originally trained on Lausanne Dataset (not public) and on JAAD Dataset\footnote{\url{http://data.nvision2.eecs.yorku.ca/JAAD_dataset/}}.
@@ -170,7 +174,7 @@ This makes the task harder, but should make the model more robust to overfitting
     and crossing the road (at the end of their lifetime).
     It works poorly for large roads where the same pedestrians can move in and out the road repeatedly.\\
     The original experiments where done on datasets where the direction of movement of the pedestrians where already known.
-    For the Jaad dataset, instead, the directions were unkown and the results were much worse.
+    For the Jaad dataset the directions were unknown and the results were much worse.\\
     \includegraphics[width=\textwidth]{results_original}\\
     To get better results we had to remove the draw-trajectories min-lifetime thresholds (so a pedestrian is considered more often, even if he
     is crossing the road at frame 0 and leaves the screen shortly after).
@@ -182,86 +186,57 @@ This makes the task harder, but should make the model more robust to overfitting
     \begin{tabular}{| c c c c |}\hline
      Model & Precision & Recall & Accuracy\\
      Jaad & 0.750 & 0.558 & 0.6714285714285714 \\
-     Jaad+Scenes & 0.742 & 0.535 & 0.7428571428571429\\
+     Jaad+Scenes & 0.742 & 0.535 & 0.7428571428571429\\\hline
     \end{tabular}
     \end{center}
 
     The results improved by adding the scenes, but the train accuracy (0.977) is still much higher, showing some overfitting.
-    We increased the model complexity to reduce overfitting, first by changing the VGG-16 CNN.
+
+
+    \subsection*{Changing the pre-trained CNNs}
+    We tested the same model changing the pretrained VGG-16 CNN (just with crops).
+
 
     \begin{center}
     \begin{tabular}{| c c c c |}\hline
-    Model & Precision & Recall & Accuracy\\
+        Model           & Precision & Recall & Accuracy\\
+        VGG-16 CNN      & 0.750     & 0.558  & 0.6714285714285714 \\
+        Wide Resnet50 2 & 0.622     & 0.535  & 0.6571428571428571 \\
+        googlenet       & 0.733     & 0.512  & 0.6857142857142857 \\
+        densenet201     & 0.565     & 0.302  & 0.6428571428571429 \\\hline
+
+
 
     \end{tabular}
     \end{center}
 
+\section{Other works on JAAD}
+Different works on the JAAD dataset implemented different models.
+Spatiotemporal Relationship Reasoning for Pedestrian Intent Prediction\cite{liu2020spatiotemporal} based their network on
+Graph Convolutional Neural Networks\cite{GCNN}, by viewing the scene as a graph and then applying the same convolutions
+to different zones.
+The prediction accuracy was at its best at 30 frames (1 second), dropping by \textasciitilde 10\% after the 90\textsuperscript{th} and
+before the 10\textsuperscript{th} frame.
+In our work we predicted the next move after 8 frames, so we increased that to 30 and 90 for a comparison.
+
+\begin{center}
+\begin{tabular}{| c c c c |}\hline
+    Authors           & model & frames & Accuracy on K\textsuperscript{th} frame\\
+     liu\cite{liu2020spatiotemporal} & Graph-CNN & 30 & 76.98\% \\
+     liu\cite{liu2020spatiotemporal} & Graph-CNN & 60 & 73.09\% \\
+     liu\cite{liu2020spatiotemporal} & Graph-CNN & 60 & 68.31\% \\%
+
+
+
+\end{tabular}
+\end{center}
+
+
+
+\bibliographystyle{apacite}  % works with overleaf
+\bibliography{mainbib}
 
 \end{document}
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-wide_resnet50_2
-
-[INFO: train.py:  165]: Starting epoch 44
-[INFO: train.py:  165]: Starting epoch 45
-[INFO: train.py:  165]: Starting epoch 46
-[INFO: train.py:  228]: Checking stats on val ...
-[INFO: train.py:  230]: Checking stats on train ...
-[INFO: train.py:  234]:   [val] d_accuracy: 0.514
-[INFO: train.py:  234]:   [val] d_fn: 20.000
-[INFO: train.py:  234]:   [val] d_fp: 14.000
-[INFO: train.py:  234]:   [val] d_loss: 0.711
-[INFO: train.py:  234]:   [val] d_precision: 0.622
-[INFO: train.py:  234]:   [val] d_recall: 0.535
-[INFO: train.py:  234]:   [val] d_tn: 13.000
-[INFO: train.py:  234]:   [val] d_tp: 23.000
-[INFO: train.py:  237]:   [train] d_accuracy: 0.601
-[INFO: train.py:  237]:   [train] d_fn: 78.000
-[INFO: train.py:  237]:   [train] d_fp: 63.000
-[INFO: train.py:  237]:   [train] d_loss: 0.690
-[INFO: train.py:  237]:   [train] d_precision: 0.677
-[INFO: train.py:  237]:   [train] d_recall: 0.629
-[INFO: train.py:  237]:   [train] d_tn: 80.000
-[INFO: train.py:  237]:   [train] d_tp: 132.000
-[INFO: train.py:  258]: Saving checkpoint to ./models/cnnlstm_jaad_standardcrop_with_model.pt
-[INFO: train.py:  260]: Done.
-[train] best accuracy at lowest loss  0.6260623229461756
-[train] best accuracy at highest accuracy  0.6260623229461756
-[val] best accuracy at lowest loss  0.6571428571428571
-[val] best accuracy at highest accuracy  0.6571428571428571
-
-
-
-googlenet
-
-
-[INFO: train.py:  165]: Starting epoch 44
-[INFO: train.py:  165]: Starting epoch 45
-[INFO: train.py:  165]: Starting epoch 46
-[INFO: train.py:  228]: Checking stats on val ...
-[INFO: train.py:  230]: Checking stats on train ...
-[INFO: train.py:  234]:   [val] d_accuracy: 0.586
-[INFO: train.py:  234]:   [val] d_fn: 21.000
-[INFO: train.py:  234]:   [val] d_fp: 8.000
-[INFO: train.py:  234]:   [val] d_loss: 0.743
-[INFO: train.py:  234]:   [val] d_precision: 0.733
-[INFO: train.py:  234]:   [val] d_recall: 0.512
-[INFO: train.py:  234]:   [val] d_tn: 19.000
-[INFO: train.py:  234]:   [val] d_tp: 22.000
-[INFO: train.py:  237]:   [train] d_accuracy: 0.663
-[INFO: train.py:  237]:   [train] d_fn: 58.000
-[INFO: train.py:  237]:   [train] d_fp: 61.000
-[INFO: train.py:  237]:   [train] d_loss: 0.646
-[INFO: train.py:  237]:   [train] d_precision: 0.712
-[INFO: train.py:  237]:   [train] d_recall: 0.722
-[INFO: train.py:  237]:   [train] d_tn: 83.000
-[INFO: train.py:  237]:   [train] d_tp: 151.000
-[INFO: train.py:  258]: Saving checkpoint to ./models/cnnlstm_jaad_standardcrop_with_model.pt
-[INFO: train.py:  260]: Done.
-[train] best accuracy at lowest loss  0.6883852691218131
-[train] best accuracy at highest accuracy  0.6883852691218131
-[val] best accuracy at lowest loss  0.6571428571428571
-[val] best accuracy at highest accuracy  0.6857142857142857
 
 
