@@ -7,6 +7,8 @@
 \usepackage{dirtree}
 \usepackage{graphicx}
 \graphicspath{ {../images/} }
+\usepackage[margin=1in]{geometry}
+
 
 \title{Pedestrian Intent Prediction}
 \author{Stefano Zanatta, Pasquale Coscia, Lamberto Ballan}
@@ -25,13 +27,13 @@
 
 \section{Introduction}
     We implemented the work of Haziq Razali, Alexandre Alah:
-    Pedestrian-Intention-Prediction\cite{PedestrianIntentionPrediction}.
+    Pedestrian-Intention-Prediction\cite{PedestrianIP}.
     The original work consists in a Convolutional Neural Network - LSTM, with the goal to predict the intention
     of pedestrians on crossing the road.\\
     The model was originally trained on Lausanne Dataset (not public) and on JAAD Dataset\footnote{\url{http://data.nvision2.eecs.yorku.ca/JAAD_dataset/}}.
     The former was recorded by static cameras, the latter on moving cameras (placed in the cars).\\
-    The goal of this project is to study the pipeline, reproduce the experiments on the JAAD dataset, then adapt and
-    improve the model for the PIE dataset\footnote{\url{https://data.nvision2.eecs.yorku.ca/PIE_dataset/}}.
+    The goal of this project is to study the pipeline, reproduce the experiments, adapt and
+    improve the model for the JAAD and PIE datasets\footnote{\url{https://data.nvision2.eecs.yorku.ca/PIE_dataset/}}.
 
 \section{Lausanne Dataset}
     %TODO general results on lausanne (by Haziq Razali)
@@ -84,7 +86,7 @@
     Now the new algorithm does not make any assumption on the initial position, to adapt to the JAAD and PIE datasets, where
     pedestrians can alternate the crossing of the road with the non-crossing and start in a crossing position.
     For example, this is the first frame of the Jaad video n\°5. In this case we expect the model to predict ``will cross''
-    for each pedestrian in the screen.
+    for each pedestrian in the screen.\\
     \includegraphics[width=0.5\textwidth]{crossing0}\\
 \subsection*{Crop Pedestrians}
     Crops each pedestrian into images, organized in sub-folders:
@@ -96,7 +98,7 @@
         .5 id\_of\_the\_pedestrian.
         .6 id\_pedestrian\_png.
     }\\
-    \includegraphics[width=0.4\textwidth]{crop}\\
+    \includegraphics[width=0.2\textwidth]{crop}\\
     Then appends the path of the crop to each frame's annotation.
     \begin{center}
     \begin{tabular}{ c c c c c c c c c c c c c c}
@@ -135,15 +137,16 @@
     }
 \section{Model}
 The model is composed of a VGG-16 pre trained CNN, a fully connected layer (feature embedder), a LSTM and
-a linear classifier to predict if the pedestrian crossed the road.\\
-\includegraphics[width=0.4\textwidth]{jaaderrorcrop}\\
+a linear classifier to predict if the pedestrian crossed the road.
+Unless differently specified, we used 50 epochs, sequences of 8 observed frames for each prediction (obs\_len), 32 batch size.\\
+\includegraphics[width=0.25\textwidth]{jaaderrorcrop}\\
 
 \subsection*{VGG-16}
-This is a pre-trained CNN that works as a feature extractor for each image.
+VGG-16 is a (pre-trained CNN) feature extractor.
 This operation is executed for each image in the batch.
 \subsection*{Feature Embedder}
 Embed the CNN output into a 255 units vector.
-Then performs dropout.
+Then performs dropout (0.5).
 
 \subsection*{LSTM}
 Process the sequence through the LSTM with ReLU activation function and dropout.
@@ -153,13 +156,13 @@ Process the sequence through the LSTM with ReLU activation function and dropout.
 Classify whether the pedestrian crossed the road or not.
 
 \subsection*{Changes to the original model}
-To improve the results, we added the entire scene as input for the prediction.
+To improve the results, we added the entire scene as input for the prediction (JAADScene).
 We added a new VGG-16 CNN, followed by a LSTM to create the sequence, then we merged the scene-LSTM output with the crops-LSTM
-outputs and adapted the input size of the linear predictor.
+outputs and adapted the input size of the linear predictor. (\#todo) % todo
 
 \\
-Another change was to add more actions as target for the linear predictor.
-This makes the task harder, but should make the model more robust to overfitting.
+For another version of the model, we added more actions as target for the linear predictor.
+This makes the task harder, but should make the model more robust to overfitting.(\#todo) %TODO
 
 
 \section{PIE Dataset}
@@ -176,8 +179,8 @@ This makes the task harder, but should make the model more robust to overfitting
     The original experiments where done on datasets where the direction of movement of the pedestrians where already known.
     For the Jaad dataset the directions were unknown and the results were much worse.\\
     \includegraphics[width=\textwidth]{results_original}\\
-    To get better results we had to remove the draw-trajectories min-lifetime thresholds (so a pedestrian is considered more often, even if he
-    is crossing the road at frame 0 and leaves the screen shortly after).
+    To get better results we had to remove the draw-trajectories min-lifetime thresholds (so a pedestrian is considered more often, even if they are
+    crossing the road at frame 0 and leaves the screen shortly after).
     This change improved the results by increasing the dataset size.\\
     The following results show the base model trained on Jaad dataset and the model improved with the scenes input.\\
     (all results are based on test data).
@@ -211,25 +214,44 @@ This makes the task harder, but should make the model more robust to overfitting
     \end{center}
 
 \section{Other works on JAAD}
-Different works on the JAAD dataset implemented different models.
-Spatiotemporal Relationship Reasoning for Pedestrian Intent Prediction\cite{liu2020spatiotemporal} based their network on
+We explored some works tested on the JAAD dataset by different authors.
+\subsection*{Spatiotemporal Relationship Reasoning for Pedestrian Intent Prediction}
+They\cite{liu2020spatiotemporal} based their network on
 Graph Convolutional Neural Networks\cite{GCNN}, by viewing the scene as a graph and then applying the same convolutions
 to different zones.
 The prediction accuracy was at its best at 30 frames (1 second), dropping by \textasciitilde 10\% after the 90\textsuperscript{th} and
 before the 10\textsuperscript{th} frame.
-In our work we predicted the next move after 8 frames, so we increased that to 30 and 90 for a comparison.
+In our work we predicted the next move after 8 frames, so we increased that to 30 for a comparison.
 
 \begin{center}
-\begin{tabular}{| c c c c |}\hline
-    Authors           & model & frames & Accuracy on K\textsuperscript{th} frame\\
-     liu\cite{liu2020spatiotemporal} & Graph-CNN & 30 & 76.98\% \\
-     liu\cite{liu2020spatiotemporal} & Graph-CNN & 60 & 73.09\% \\
-     liu\cite{liu2020spatiotemporal} & Graph-CNN & 60 & 68.31\% \\%
-
-
+\begin{tabular}{| c c c |}\hline
+    model & frames & Accuracy on K\textsuperscript{th} frame\\
+    Graph-CNN & 30 & 76.98\% \\
+    Graph-CNN & 60 & 73.09\% \\
+    Graph-CNN & 60 & 68.31\% \\
+    Crops+googlenet(ours) & 30 & \% \\\hline
 
 \end{tabular}
 \end{center}
+
+\subsection*{PEDESTRIAN INTENTION PREDICTION: A MULTI-TASK PERSPECTIVE}
+This model is more similar to ours, because it inputs the pedestrian's cropped images to a feature extractor (CNN), a
+LSTM and to a fully connected layer for prediction.
+The main difference is that they perform multi-tasking learning, predicting both the crossing/non-crossing and the velocity of
+each bounding box (for each pedestrian).
+They also tested the same model adding the scene to the input (other then the crops), but reducing their size for faster training.\\
+Adding a different task (velocity prediction) improved the intent prediction by \textasciitilde 2\%.
+
+\begin{center}
+\begin{tabular}{| c c |}\hline
+    model & Accuracy\\
+
+    Single-task PV-LSTM & 89.67\\
+    Multi-task PV-LSTM & 91.48\\\hline
+
+\end{tabular}
+\end{center}
+
 
 
 
@@ -239,4 +261,30 @@ In our work we predicted the next move after 8 frames, so we increased that to 3
 \end{document}
 
 
+scenes with 30 frames prediction
+[INFO: train.py:  234]:   [val] d_accuracy: 0.605
+[INFO: train.py:  234]:   [val] d_fn: 13.000
+[INFO: train.py:  234]:   [val] d_fp: 2.000
+[INFO: train.py:  234]:   [val] d_loss: 0.847
+[INFO: train.py:  234]:   [val] d_precision: 0.600
+[INFO: train.py:  234]:   [val] d_recall: 0.188
+[INFO: train.py:  234]:   [val] d_tn: 20.000
+[INFO: train.py:  234]:   [val] d_tp: 3.000
+[INFO: train.py:  237]:   [train] d_accuracy: 0.686
+[INFO: train.py:  237]:   [train] d_fn: 42.000
+[INFO: train.py:  237]:   [train] d_fp: 22.000
+[INFO: train.py:  237]:   [train] d_loss: 0.658
+[INFO: train.py:  237]:   [train] d_precision: 0.744
+[INFO: train.py:  237]:   [train] d_recall: 0.604
+[INFO: train.py:  237]:   [train] d_tn: 76.000
+[INFO: train.py:  237]:   [train] d_tp: 64.000
+[INFO: train.py:  258]: Saving checkpoint to ./models/cnnlstm_jaad_standardcrop_with_model.pt
+[INFO: train.py:  260]: Done.
+[INFO: train.py:  165]: Starting epoch 44
+[INFO: train.py:  165]: Starting epoch 45
+[INFO: train.py:  165]: Starting epoch 46
+[train] best accuracy at lowest loss  0.6470588235294118
+[train] best accuracy at highest accuracy  0.6862745098039216
+[val] best accuracy at lowest loss  0.5263157894736842
+[val] best accuracy at highest accuracy  0.6578947368421053
 

@@ -972,3 +972,186 @@ class CNNLSTMJAAD2(nn.Module):
         # looking_pred_all = self.linear_classifier(looking_pred_all)
         # walking_pred_all = self.linear_classifier(walking_pred_all)
         # crossing_pred_all = self.linear_classifier(crossing_pred_all)
+
+
+class CNNLSTM1_DEEP(nn.Module):
+    def __init__(
+            self, embedding_dim=256, h_dim=32, mlp_dim=64, dropout=0.0, grad=False
+    ):
+        super(CNNLSTM1_DEEP, self).__init__()
+
+        # parameters
+        self.embedding_dim = embedding_dim
+        self.h_dim = h_dim
+        self.mlp_dim = mlp_dim
+        self.dropout = dropout
+
+        # gradients
+        self.gradients = None
+
+        # CNN Feature Extractor
+        self.model = models.googlenet(pretrained=True)
+        outsize = self.model. fc.out_features
+        self.model = nn.Sequential(self.model)  # *list(self.model.children())[0])
+
+        # feature embedder
+        self.feature_embedder = nn.Linear(outsize, embedding_dim)# (1536, embedding_dim)
+
+        # LSTM
+        self.lstm0 = nn.LSTM(embedding_dim, h_dim, 1, batch_first=False)  # encoder/decoder (idea from https://arxiv.org/pdf/2010.10270.pdf#page=8&zoom=100,96,622)
+        self.lstm1 = nn.LSTM(h_dim, h_dim//2, 1, batch_first=False)
+        self.lstm2 = nn.LSTM(h_dim//2, h_dim, 1, batch_first=False)
+
+        # Linear classifier
+        self.linear_classifier = nn.Linear(h_dim, 2)
+
+        # CNN gradients disabled
+        if not grad:
+            for i, (name, param) in enumerate(self.model.named_parameters()):
+                if param.requires_grad:  # and i != 24 or i!= 25:
+                    # print(i,name,param.size())
+                    param.requires_grad = False
+                    # CNN gradients enabled for guided backprop
+        else:
+            for name, param in self.model.named_parameters():
+                if param.requires_grad:
+                    param.requires_grad = True
+            self.hook_layers()
+            self.update_relus()
+
+    # Set hook to the first CNN layer
+    def hook_layers(self):
+        def hook_function(module, grad_in, grad_out):
+            self.gradients = grad_in[0]
+            # grad_out[0].size = timesteps x 64 x 100 x 40
+            # grad_in[0].size = None
+            # grad_in[1].size = 64 x 3 x 3 x 3 (64 3x3x3 filters)
+            # grad_in[2].size = 64 (biases)
+
+        self.model[0].register_backward_hook(hook_function)
+
+    # Updates relu activation functions so that it only returns positive gradients
+    def update_relus(self):
+        # Clamp negative gradients to 0
+        def relu_hook_function(module, grad_in, grad_out):
+            if isinstance(module, ReLU):
+                return torch.clamp(grad_in[0], min=0.0),
+
+        # Loop through convolutional feature extractor and hook up ReLUs with relu_hook_function
+        for i in range(len(self.model)):
+            if isinstance(self.model[i], ReLU):
+                self.model[i].register_backward_hook(relu_hook_function)
+        ## Loop through MLP and hook up ReLUs with relu_hook_function
+        # for i in range(len(self.classifier)):
+        #    if isinstance(self.classifier[i], ReLU):
+        #        self.classifier[i].register_backward_hook(relu_hook_function)
+
+    def init_hidden(self, batch):
+        if torch.cuda.is_available():
+            return (
+                torch.zeros(1, batch, self.h_dim).cuda(),
+                torch.zeros(1, batch, self.h_dim).cuda()
+            )
+        else:
+            return (
+                torch.zeros(1, batch, self.h_dim),
+                torch.zeros(1, batch, self.h_dim)
+            )
+
+    def pedestrian_forward(self, images_pedestrian_all, input_as_var):
+        # for each pedestrian
+        # features_pedestrian_all = []
+        state_all = []
+        for images_pedestrian_i in images_pedestrian_all:
+
+            # sequence length
+            seq_len = images_pedestrian_i.size(0)
+
+            # if we want the input to be a Variable
+            # used for guided backprop
+            if input_as_var:
+                if torch.cuda.is_available():
+                    images_pedestrian_i = Variable(images_pedestrian_i.cuda(), requires_grad=True)
+                else:
+                    images_pedestrian_i = Variable(images_pedestrian_i, requires_grad=True)
+            else:
+                if torch.cuda.is_available():
+                    images_pedestrian_i = images_pedestrian_i.cuda()
+                else:
+                    images_pedestrian_i = images_pedestrian_i
+
+                    # send all the images of the current pedestrian through the CNN feature extractor
+            features_pedestrian_i = self.model(images_pedestrian_i)
+            features_pedestrian_i = features_pedestrian_i.view(seq_len, -1)  # flatten
+
+            # embed the features
+            features_pedestrian_i = self.feature_embedder(features_pedestrian_i)  # (seq length, 64)
+            features_pedestrian_i = F.dropout(F.relu(features_pedestrian_i), p=self.dropout)
+            features_pedestrian_i = torch.unsqueeze(features_pedestrian_i, 1)
+
+            # send through lstm and get the final output
+            state_tuple = self.init_hidden(1)
+            out, state = self.lstm0(features_pedestrian_i)
+            out, state = self.lstm1(out)
+            out, state = self.lstm2(out)
+            state_all.append(F.relu(F.dropout(state[0].squeeze(), p=self.dropout)))
+
+        state_all = torch.stack(state_all, dim=0)
+        return state_all
+
+    def forward(self, images_pedestrian_all, input_as_var=False, classify_every_timestep=False):
+        """
+        Inputs:
+        - obs_traj: Tensor of shape (obs_len, batch, 2)
+        Output:
+        - final_h: Tensor of shape (self.num_layers, batch, self.h_dim)
+        """
+
+        # batch = number of pedestrians where sequence length of each pedestrian varies
+        batch = len(images_pedestrian_all)
+
+        # We are not going to classify at every timestep.
+        if not classify_every_timestep:
+            states_crops = self.pedestrian_forward(images_pedestrian_all, input_as_var)
+            y_pred_crops = self.linear_classifier(states_crops)
+            return y_pred_crops
+
+        # We are going to classify at every timestep
+        if classify_every_timestep:
+            y_pred_all = []
+            # for each pedestrian
+            for images_pedestrian_i in images_pedestrian_all:
+                y_pred_i = []
+
+                # sequence length
+                seq_len = images_pedestrian_i.size(0)
+
+                # if we want the input to be a Variable
+                # used for guided backprop
+                if input_as_var:
+                    if torch.cuda.is_available():
+                        images_pedestrian_i = Variable(images_pedestrian_i.cuda(), requires_grad=True)
+                    else:
+                        images_pedestrian_i = Variable(images_pedestrian_i, requires_grad=True)
+                else:
+                    if torch.cuda.is_available():
+                        images_pedestrian_i = images_pedestrian_i.cuda()
+                    else:
+                        images_pedestrian_i = images_pedestrian_i
+
+                # send all the images of the current pedestrian through the CNN feature extractor
+                features_pedestrian_i = self.model(images_pedestrian_i)
+                features_pedestrian_i = features_pedestrian_i.view(seq_len, -1)
+
+                # embed the features
+                features_pedestrian_i = self.feature_embedder(features_pedestrian_i)  # (seq length, 64)
+
+                # send through lstm and classify at each timestep
+                state_tuple = self.init_hidden(1)
+                for f in features_pedestrian_i:
+                    output, state_tuple = self.lstm(f.view(1, 1, -1), state_tuple)
+                    y_pred = self.linear_classifier(state_tuple[0])
+                    y_pred_i.append(y_pred.squeeze().max(0)[1])
+                # append classification results for current pedestrian
+                y_pred_all.append(torch.stack(y_pred_i, dim=0))
+            return y_pred_all
