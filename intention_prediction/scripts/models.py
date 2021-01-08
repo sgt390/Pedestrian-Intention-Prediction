@@ -61,7 +61,7 @@ class CNNLSTM1_vgg(nn.Module):
 
         # CNN Feature Extractor
         self.model = models.vgg16(pretrained=True)
-        self.model = nn.Sequential(*list(self.model.children())) #nn.Sequential(self.model)  #
+        self.model = nn.Sequential(*list(self.model.children())[0]) #nn.Sequential(self.model)  #
 
         # feature embedder
         self.feature_embedder = nn.Linear(1536, embedding_dim)# (1536, embedding_dim)
@@ -1176,8 +1176,8 @@ class CNNLSTM1_SCENES_2(nn.Module):
         self.model_crops = nn.Sequential(self.model_crops)  # *list(self.model.children())[0])
 
         self.maxpooling = nn.MaxPool2d(4)
-        self.model_scenes = models.googlenet(pretrained=True)
-        self.model_scenes = nn.Sequential(self.model_crops)  # *list(self.model.children())[0])
+        self.model_scenes = models.vgg16(pretrained=True)
+        self.model_scenes = nn.Sequential(*list(self.model_scenes.children())[0])  # self.model_scenes.children())[0]
 
         # feature embedder
         self.feature_embedder_crops = nn.Linear(outsize, embedding_dim)
