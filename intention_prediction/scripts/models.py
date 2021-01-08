@@ -1282,7 +1282,7 @@ class CNNLSTM1_SCENES_2(nn.Module):
                     images_scenes_i = images_scenes_i
 
                     # send all the images of the current scenes through the CNN feature extractor
-            features_scenes_i = self.model_scenes(self.maxpooling(images_scenes_i))
+            features_scenes_i = self.model_scenes(images_scenes_i)
             features_scenes_i = features_scenes_i.view(seq_len, -1)  # flatten
 
             # embed the features
