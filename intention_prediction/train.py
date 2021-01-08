@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 from intention_prediction.scripts.data.loaderJAAD import data_loader
 from intention_prediction.scripts.losses import gan_g_loss, gan_d_loss, l2_loss
 
-from intention_prediction.scripts.models import CNNLSTM1_DEEP as CNNLSTM  # , CNNMP
+from intention_prediction.scripts.models import CNNLSTM1_vgg as CNNLSTM  # , CNNMP
 #from intention_prediction.scripts.models import CNNLSTMJAAD2 as CNNLSTM  # , CNNMP
 from intention_prediction.scripts.utils import int_tuple, bool_flag, get_total_norm
 from intention_prediction.scripts.utils import relative_to_abs, get_dset_path
