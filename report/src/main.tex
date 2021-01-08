@@ -196,24 +196,30 @@ This makes the task harder, but should make the model more robust to overfitting
     The results improved by adding the scenes, but the train accuracy (0.977) is still much higher, showing some overfitting.
 
 
-    \subsection*{Changing the pre-trained CNNs}
-    We tested the same model changing the pretrained VGG-16 CNN (just with crops).
+
+\section{Changes to the Model}
+We tested some changes to the hyperparameters or the structure of the baseline model.
+We started by changing the feature extractor (pretrained CNNs) and then implementing ideas from different works on JAAD.
+
+\subsection*{Changing the pre-trained CNNs}
+We tested the same model changing the pretrained VGG-16 CNN (just with crops).
+Googlenet (best CNN for crops) scenes resulted in worse accuracy when applied to the scenes.
 
 
-    \begin{center}
-    \begin{tabular}{| c c c c |}\hline
-        Model           & Precision & Recall & Accuracy\\
-        VGG-16 CNN      & 0.750     & 0.558  & 0.6714285714285714 \\
-        Wide Resnet50 2 & 0.622     & 0.535  & 0.6571428571428571 \\
-        googlenet       & 0.733     & 0.512  & 0.6857142857142857 \\
-        densenet201     & 0.565     & 0.302  & 0.6428571428571429 \\\hline
+\begin{center}
+\begin{tabular}{| c c c c |}\hline
+    Model           & Precision & Recall & Accuracy\\
+    VGG-16 CNN      & 0.750     & 0.558  & 0.6714285714285714 \\
+    Wide Resnet50 2 & 0.622     & 0.535  & 0.6571428571428571 \\
+    googlenet       & 0.733     & 0.512  & 0.6857142857142857 \\
+    densenet201     & 0.565     & 0.302  & 0.6428571428571429 \\
+    googlenet+scenes &  0.600  &  0.188     &  0.7 \\              \hline
 
 
 
-    \end{tabular}
-    \end{center}
+\end{tabular}
+\end{center}
 
-\section{Other works on JAAD}
 We explored some works tested on the JAAD dataset by different authors.
 \subsection*{Spatiotemporal Relationship Reasoning for Pedestrian Intent Prediction}
 They\cite{liu2020spatiotemporal} based their network on
@@ -222,14 +228,15 @@ to different zones.
 The prediction accuracy was at its best at 30 frames (1 second), dropping by \textasciitilde 10\% after the 90\textsuperscript{th} and
 before the 10\textsuperscript{th} frame.
 In our work we predicted the next move after 8 frames, so we increased that to 30 for a comparison.
+The accuracy did not improve and the training times increased by too much, so we did not try the 60 and 90 frames prediction.
 
 \begin{center}
 \begin{tabular}{| c c c |}\hline
     model & frames & Accuracy on K\textsuperscript{th} frame\\
-    Graph-CNN & 30 & 76.98\% \\
-    Graph-CNN & 60 & 73.09\% \\
-    Graph-CNN & 60 & 68.31\% \\
-    Crops+googlenet(ours) & 30 & \% \\\hline
+    Graph-CNN & 30 & 0.7698 \\
+    Graph-CNN & 60 & 0.7309 \\
+    Graph-CNN & 90 & 0.6831 \\
+    Crops+googlenet(ours) & 30 & 0.578947368421053 \\\hline
 
 \end{tabular}
 \end{center}
@@ -237,6 +244,7 @@ In our work we predicted the next move after 8 frames, so we increased that to 3
 \subsection*{PEDESTRIAN INTENTION PREDICTION: A MULTI-TASK PERSPECTIVE}
 This model is more similar to ours, because it inputs the pedestrian's cropped images to a feature extractor (CNN), a
 LSTM and to a fully connected layer for prediction.
+Hyperparameters set to 100 (instead of 50) epochs and 12 frames per sequence (instead of 8).
 The main difference is that they perform multi-tasking learning, predicting both the crossing/non-crossing and the velocity of
 each bounding box (for each pedestrian).
 They also tested the same model adding the scene to the input (other then the crops), but reducing their size for faster training.\\
@@ -246,12 +254,22 @@ Adding a different task (velocity prediction) improved the intent prediction by 
 \begin{tabular}{| c c |}\hline
     model & Accuracy\\
 
-    Single-task PV-LSTM & 89.67\\
-    Multi-task PV-LSTM & 91.48\\\hline
+    Single-task PV-LSTM & 08967\\
+    Multi-task PV-LSTM & 0.9148\\\hline
 
 \end{tabular}
 \end{center}
+We implemented the multitask learning approach, but could not compare the results because we did not have access to the
+velocity for the bounding boxes.
 
+\begin{center}
+\begin{tabular}{| c c c c |}\hline
+    model & precision & recall & Accuracy\\
+    googlenet+scenes &  0.600  &  0.188 &  0.7 \\
+
+
+\end{tabular}
+\end{center}
 
 
 
@@ -288,3 +306,27 @@ scenes with 30 frames prediction
 [val] best accuracy at lowest loss  0.5263157894736842
 [val] best accuracy at highest accuracy  0.6578947368421053
 
+
+scenes &
+[INFO: train-scenes.py:  234]:   [val] d_accuracy: 0.686
+[INFO: train-scenes.py:  234]:   [val] d_fn: 12.000
+[INFO: train-scenes.py:  234]:   [val] d_fp: 10.000
+[INFO: train-scenes.py:  234]:   [val] d_loss: 0.960
+[INFO: train-scenes.py:  234]:   [val] d_precision: 0.756
+[INFO: train-scenes.py:  234]:   [val] d_recall: 0.721
+[INFO: train-scenes.py:  234]:   [val] d_tn: 17.000
+[INFO: train-scenes.py:  234]:   [val] d_tp: 31.000
+[INFO: train-scenes.py:  237]:   [train] d_accuracy: 0.969
+[INFO: train-scenes.py:  237]:   [train] d_fn: 3.000
+[INFO: train-scenes.py:  237]:   [train] d_fp: 8.000
+[INFO: train-scenes.py:  237]:   [train] d_loss: 0.094
+[INFO: train-scenes.py:  237]:   [train] d_precision: 0.963
+[INFO: train-scenes.py:  237]:   [train] d_recall: 0.986
+[INFO: train-scenes.py:  237]:   [train] d_tn: 135.000
+[INFO: train-scenes.py:  237]:   [train] d_tp: 207.000
+[INFO: train-scenes.py:  258]: Saving checkpoint to ./models/cnnlstm_jaad_standardcrop_with_model.pt
+[INFO: train-scenes.py:  260]: Done.
+[train] best accuracy at lowest loss  0.9688385269121813
+[train] best accuracy at highest accuracy  0.9688385269121813
+[val] best accuracy at lowest loss  0.6571428571428571
+[val] best accuracy at highest accuracy  0.7

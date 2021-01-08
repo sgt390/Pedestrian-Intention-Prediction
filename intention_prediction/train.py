@@ -274,7 +274,7 @@ def main(args):
 
 
 def step(args, batch, classifier, loss_fn, optimizer):
-    (pedestrian_crops, _, _, _, decision_true, _, _, scenes_images, *_) = batch
+    (pedestrian_crops, _, _, _, decision_true, _, _, _, *_) = batch
 
     losses = {}
     loss = torch.zeros(1).type(torch.cuda.FloatTensor) if torch.cuda.is_available() else torch.zeros(1).type(

@@ -606,11 +606,11 @@ class CNNLSTM1_SCENES(nn.Module):
 
 
 # ======= CNN LSTM MODEL =========== #
-class CNNLSTM2(nn.Module):
+class CNNLSTM_MULTITARGET(nn.Module):
     def __init__(
             self, embedding_dim=256, h_dim=32, mlp_dim=64, dropout=0.0, grad=False
     ):
-        super(CNNLSTM2, self).__init__()
+        super(CNNLSTM_MULTITARGET, self).__init__()
 
         # parameters
         self.embedding_dim = embedding_dim
@@ -633,7 +633,8 @@ class CNNLSTM2(nn.Module):
         self.lstm_dropout = nn.Dropout(p=self.dropout)
 
         # Linear classifier
-        self.linear_classifier = nn.Linear(h_dim, 2)
+        self.linear_classifier_0 = nn.Linear(h_dim, 2)
+        self.linear_classifier_1 = nn.Linear(h_dim, 2)
 
         # CNN gradients disabled
         if not grad:
@@ -737,51 +738,10 @@ class CNNLSTM2(nn.Module):
                 state_all.append(self.lstm_dropout(self.lstm_relu(state[0].squeeze())))
 
             state_all = torch.stack(state_all, dim=0)
-            y_pred = self.linear_classifier(state_all)
+            y_pred_0 = self.linear_classifier_0(state_all)
+            y_pred_1 = self.linear_classifier_1(state_all)
+            y_pred = torch.stack([y_pred_0, y_pred_1])
             return y_pred
-
-        if classify_every_timestep:
-            y_pred_all = []
-            # for each pedestrian
-            for images_pedestrian_i in images_pedestrian_all:
-                y_pred_i = []
-
-                # sequence length
-                seq_len = images_pedestrian_i.size(0)
-
-                # if we want the input to be a Variable
-                # used for guided backprop
-                if input_as_var:
-                    if torch.cuda.is_available():
-                        images_pedestrian_i = Variable(images_pedestrian_i.cuda(), requires_grad=True)
-                    else:
-                        images_pedestrian_i = Variable(images_pedestrian_i, requires_grad=True)
-                else:
-                    if torch.cuda.is_available():
-                        images_pedestrian_i = images_pedestrian_i.cuda()
-                    else:
-                        images_pedestrian_i = images_pedestrian_i
-
-                # send all the images of the current pedestrian through the CNN feature extractor
-                features_pedestrian_i = self.model(images_pedestrian_i)
-                features_pedestrian_i = features_pedestrian_i.view(seq_len, -1)
-
-                # relu-dropout-flatten
-                features_pedestrian_i = F.dropout(F.relu(features_pedestrian_i), p=self.dropout)
-                features_pedestrian_i = torch.unsqueeze(features_pedestrian_i, 1)
-
-                # send through lstm and classify at each timestep
-                state_tuple = self.init_hidden(1)
-                for f in features_pedestrian_i:
-                    # get the state
-                    output, state_tuple = self.lstm(f.view(1, 1, -1), state_tuple)
-                    # relu-dropout-classify
-                    y_pred = self.linear_classifier(F.relu(F.dropout(state_tuple[0])))
-                    y_pred_i.append(y_pred.squeeze().max(0)[
-                                        1])  # y_pred_i.append(y_pred.squeeze().max(0)[1])
-                # append classification results for current pedestrian
-                y_pred_all.append(torch.stack(y_pred_i, dim=0))
-            return y_pred_all
 
 
 # ======= CNN LSTM MODEL =========== #
@@ -1171,16 +1131,15 @@ class CNNLSTM1_SCENES_2(nn.Module):
         self.gradients = None
 
         # CNN Feature Extractor
-        self.model_crops = models.googlenet(pretrained=True)
-        outsize = self.model_crops.fc.out_features
-        self.model_crops = nn.Sequential(self.model_crops)  # *list(self.model.children())[0])
+        self.model_crops = models.vgg16(pretrained=True)
+        #outsize = self.model_crops.fc.out_features
+        self.model_crops = nn.Sequential(*list(self.model_crops.children())[0])  # *list(self.model.children())[0])
 
-        self.maxpooling = nn.MaxPool2d(4)
         self.model_scenes = models.vgg16(pretrained=True)
         self.model_scenes = nn.Sequential(*list(self.model_scenes.children())[0])  # self.model_scenes.children())[0]
 
         # feature embedder
-        self.feature_embedder_crops = nn.Linear(outsize, embedding_dim)
+        self.feature_embedder_crops = nn.Linear(1536, embedding_dim)
         self.feature_embedder_scenes = nn.Linear(1536, embedding_dim)
 
         # LSTM
