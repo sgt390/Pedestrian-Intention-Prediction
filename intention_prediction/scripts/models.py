@@ -633,8 +633,10 @@ class CNNLSTM_MULTITARGET(nn.Module):
         self.lstm_dropout = nn.Dropout(p=self.dropout)
 
         # Linear classifier
-        self.linear_classifier_0 = nn.Linear(h_dim, 2)
-        self.linear_classifier_1 = nn.Linear(h_dim, 2)
+        self.linear_classifier_stand = nn.Linear(h_dim, 2)
+        self.linear_classifier_look = nn.Linear(h_dim, 2)
+        self.linear_classifier_walk = nn.Linear(h_dim, 2)
+        self.linear_classifier_cross = nn.Linear(h_dim, 2)
 
         # CNN gradients disabled
         if not grad:
@@ -738,9 +740,11 @@ class CNNLSTM_MULTITARGET(nn.Module):
                 state_all.append(self.lstm_dropout(self.lstm_relu(state[0].squeeze())))
 
             state_all = torch.stack(state_all, dim=0)
-            y_pred_0 = self.linear_classifier_0(state_all)
-            y_pred_1 = self.linear_classifier_1(state_all)
-            y_pred = torch.stack([y_pred_0, y_pred_1])
+            y_pred_stand = self.linear_classifier_stand(state_all)
+            y_pred_look = self.linear_classifier_look(state_all)
+            y_pred_walk = self.linear_classifier_walk(state_all)
+            y_pred_cross = self.linear_classifier_cross(state_all)
+            y_pred = torch.stack([y_pred_stand, y_pred_look, y_pred_walk, y_pred_cross])
             return y_pred
 
 

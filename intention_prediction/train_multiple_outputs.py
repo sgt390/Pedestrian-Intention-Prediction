@@ -274,8 +274,8 @@ def main(args):
 
 
 def step(args, batch, classifier, loss_fn, optimizer):
-    (pedestrian_crops, standing_true, _, _, crossing_true, *_) = batch
-    groundtruth = standing_true, crossing_true # standing_true, looking_true, walking_true, crossing_true
+    (pedestrian_crops, standing_true, looking_true, walking_true, crossing_true, *_) = batch
+    groundtruth = standing_true, looking_true, walking_true, crossing_true
 
     losses = {}
     loss = torch.zeros(1).type(torch.cuda.FloatTensor) if torch.cuda.is_available() else torch.zeros(1).type(torch.FloatTensor)
@@ -284,13 +284,13 @@ def step(args, batch, classifier, loss_fn, optimizer):
     pred = classifier(pedestrian_crops)
 
     # compute loss
-    data_loss_standing_all = []
+    data_loss_all = []
     for gt, pred in zip(groundtruth, pred):
-        data_loss_standing_all.append(loss_fn(pred, standing_true.cuda()) if torch.cuda.is_available() else loss_fn(pred, gt.cpu()))
+        data_loss_all.append(loss_fn(pred, gt.cuda()) if torch.cuda.is_available() else loss_fn(pred, gt.cpu()))
 
-    loss_n = [data_loss.item() for data_loss in data_loss_standing_all]
+    loss_n = [data_loss.item() for data_loss in data_loss_all]
     data_loss_sum = torch.zeros(1).type(torch.cuda.FloatTensor) if torch.cuda.is_available() else torch.zeros(1).type(torch.FloatTensor)
-    for data_loss in data_loss_standing_all:
+    for data_loss in data_loss_all:
         data_loss_sum += data_loss
     avg = data_loss_sum / len(loss_n)
     losses['data_loss'] = avg
@@ -337,7 +337,7 @@ def guided_backprop(args, loader, classifier,):
 def check_accuracy(args, loader, classifier, loss_fn):
     losses = [[], []]
 
-    confusions = [[], []]  #todo generalize
+    confusions = [[]]  #todo generalize
     classifier.eval()
     with torch.no_grad():
         for batch in loader:
@@ -345,29 +345,29 @@ def check_accuracy(args, loader, classifier, loss_fn):
             (pedestrian_crops, standing_true, looking_true, walking_true, crossing_true, *_) = batch
 
             # predict decision
-            crossing_pred, standing_pred = classifier(pedestrian_crops)  # (standing_pred, looking_pred, walking_pred, crossing_pred)
+            standing_pred, looking_pred, walking_pred, crossing_pred = classifier(pedestrian_crops)  # (standing_pred, looking_pred, walking_pred, crossing_pred)
 
             # compute loss
-            standing_loss = loss_fn(standing_pred, standing_true)  #todo decision_true.cpu()
-            # looking_loss = loss_fn(looking_pred, looking_true)
-            # walking_loss = loss_fn(walking_pred, walking_true)
+            #standing_loss = loss_fn(standing_pred, standing_true)  #todo decision_true.cpu()
+            #looking_loss = loss_fn(looking_pred, looking_true)
+            #walking_loss = loss_fn(walking_pred, walking_true)
             crossing_loss = loss_fn(crossing_pred, crossing_true)
 
-            losses[0].append(standing_loss.item())
-            # losses[1].append(looking_loss.item())
-            # losses[2].append(walking_loss.item())
-            losses[1].append(crossing_loss.item())
+            #losses[0].append(standing_loss.item())
+            #losses[1].append(looking_loss.item())
+            #losses[2].append(walking_loss.item())
+            losses[0].append(crossing_loss.item())
 
 
             # build confusion matrix
-            standing_confusion = confusion_matrix(standing_true.numpy(), standing_pred.max(1)[1].numpy())
-            # looking_confusion = confusion_matrix(looking_true.numpy(), looking_pred.max(1)[1].numpy())
-            # walking_confusion = confusion_matrix(walking_true.numpy(), walking_pred.max(1)[1].numpy())
+            #standing_confusion = confusion_matrix(standing_true.numpy(), standing_pred.max(1)[1].numpy())
+            #looking_confusion = confusion_matrix(looking_true.numpy(), looking_pred.max(1)[1].numpy())
+            #walking_confusion = confusion_matrix(walking_true.numpy(), walking_pred.max(1)[1].numpy())
             crossing_confusion = confusion_matrix(crossing_true.numpy(), crossing_pred.max(1)[1].numpy())
-            confusions[0].append(standing_confusion)
-            # confusions[1].append(looking_confusion)
-            # confusions[2].append(walking_confusion)
-            confusions[1].append(crossing_confusion)
+            #confusions[0].append(standing_confusion)
+            #confusions[1].append(looking_confusion)
+            #confusions[2].append(walking_confusion)
+            confusions[0].append(crossing_confusion)
 
     metrics = [{} for _ in range(len(losses))]
     for i, (data_confusions, data_losses) in enumerate(zip(confusions, losses)):
