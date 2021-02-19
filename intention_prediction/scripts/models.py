@@ -147,7 +147,7 @@ class CNNLSTM1_vgg(nn.Module):
                 else:
                     images_pedestrian_i = images_pedestrian_i
 
-                    # send all the images of the current pedestrian through the CNN feature extractor
+            # send all the images of the current pedestrian through the CNN feature extractor
             features_pedestrian_i = self.model(images_pedestrian_i)
             features_pedestrian_i = features_pedestrian_i.view(seq_len, -1)  # flatten
 
@@ -216,10 +216,10 @@ class CNNLSTM1_vgg(nn.Module):
                 for f in features_pedestrian_i:
                     output, state_tuple = self.lstm(f.view(1, 1, -1), state_tuple)
                     y_pred = self.linear_classifier(state_tuple[0])
-                    y_pred_i.append(y_pred.squeeze().max(0)[1])
+                    y_pred_i.append(y_pred) # y_pred.squeeze().max(0)[1])
                 # append classification results for current pedestrian
                 y_pred_all.append(torch.stack(y_pred_i, dim=0))
-            return y_pred_all
+            return torch.stack(y_pred_all)
 
 
 ############ googlenet ###################

@@ -25,7 +25,7 @@ def data_loader(args, path, dtype):
     # validation set should never use the weighted random sampler
     if dtype == "val":
         df = JAADDataset(path, args.obs_len, args.obs_len, args.timestep)
-        dataset = JAADLoader(df, path, dtype, args.obs_len)
+        dataset = JAADLoader(df, path, dtype, 1) # args.obs_len)
         #print(dtype, " has ", neg_sample_size, " negative samples and ", pos_sample_size, " positive samples")
 
         # build the val iterator

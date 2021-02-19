@@ -340,8 +340,7 @@ def check_accuracy(args, loader, classifier, loss_fn):
             (pedestrian_crops, _, _, _, decision_true, *_) = batch
 
             # predict decision
-            decision_pred = classifier(pedestrian_crops)
-
+            decision_pred = classifier(pedestrian_crops) ### todo check if correct (also [0] below)
             # compute loss
             data_loss = loss_fn(decision_pred, decision_true)  #todo decision_true.cpu()
             data_losses.append(data_loss.item())
