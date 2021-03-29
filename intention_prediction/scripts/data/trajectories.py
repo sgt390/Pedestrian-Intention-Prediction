@@ -275,7 +275,7 @@ class JAADLoader(Dataset):
         standing = df["standing"][-1 * self.max_obs_len:]
         looking = df["looking"][-1 * self.max_obs_len:]
         walking = df["walking"][-1 * self.max_obs_len:]
-        crossing = df["incrossing"][-1 * self.max_obs_len:]
+        crossing = df["cross"][-1 * self.max_obs_len:]# df["incrossing"][-1 * self.max_obs_len:]   #TODO testing cross over incrossing
 
         pedestrian_images = []
         scenes_images = []
