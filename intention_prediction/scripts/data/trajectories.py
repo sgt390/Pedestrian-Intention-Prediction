@@ -262,7 +262,7 @@ class JAADLoader(Dataset):
             self.transform = val_transforms
         # skipped timesteps between the sequence of images and the image to predict
         # TODO CUSTOM VALUE!!!!!!!!!!!!!!
-        self.sequence_to_prediction_delay = 8  # in timesteps (e.g. 8 -> 15timesteps*8=120sec delay)
+        self.sequence_to_prediction_delay = 4  # in timesteps (e.g. 8 -> 15timesteps*8=120sec delay)
 
     def __len__(self):
         return len(self.df)
