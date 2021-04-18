@@ -1,5 +1,4 @@
 import os
-import cv2
 import math
 import glob
 import random
@@ -261,6 +260,8 @@ class JAADLoader(Dataset):
             self.transform = train_transforms
         if self.dtype == "val":
             self.transform = val_transforms
+        # skipped timesteps between the sequence of images and the image to predict
+        self.sequence_to_prediction_delay = 8  # in timesteps (e.g. 8 -> 15timesteps*8=120sec delay)
 
     def __len__(self):
         return len(self.df)
@@ -272,10 +273,13 @@ class JAADLoader(Dataset):
         df = self.df.iloc[index]
 
         # load the images, the label, and the relevant filename
-        standing = df["standing"][-1 * self.max_obs_len:]
-        looking = df["looking"][-1 * self.max_obs_len:]
-        walking = df["walking"][-1 * self.max_obs_len:]
-        crossing = df["incrossing"][-1 * self.max_obs_len:]   #TODO testing cross over incrossing
+        obs_sequence_start = (-1 * self.max_obs_len)-self.sequence_to_prediction_delay
+        # else -1 because last frame is added in any case
+        obs_sequence_end = -1 * self.sequence_to_prediction_delay if self.sequence_to_prediction_delay else -1
+        standing = df["standing"][obs_sequence_start: obs_sequence_end]
+        looking = df["looking"][obs_sequence_start: obs_sequence_end]
+        walking = df["walking"][obs_sequence_start: obs_sequence_end]
+        crossing = df["incrossing"][obs_sequence_start: obs_sequence_end]   #TODO testing cross over incrossing
 
         pedestrian_images = []
         scenes_images = []
@@ -283,17 +287,23 @@ class JAADLoader(Dataset):
         pedestrian_filenames = []
         scenes_folderpaths = []
         scenes_filenames = []
-        for folderpath, filename in zip(df["folderpath"][-1 * self.max_obs_len:], df["filename"][-1 * self.max_obs_len:]):
+        for folderpath, filename in zip(df["folderpath"][obs_sequence_start:obs_sequence_end], df["filename"][obs_sequence_start:obs_sequence_end]):
             pedestrian_images.append(Image.open(os.path.join(self.data_dir, folderpath, filename)))
             pedestrian_folderpaths.append(folderpath)
             pedestrian_filenames.append(filename)
+        pedestrian_images.append(Image.open(os.path.join(self.data_dir, df["folderpath"][-1], df['filename'][-1])))
+        pedestrian_folderpaths.append(df['folderpath'][-1])
+        pedestrian_filenames.append(df['filename'][-1])
 
         if 'scene_folderpath' in df:
-            for folderpath, filename in zip(df["scene_folderpath"][-1 * self.max_obs_len:], df["scene_filename"][-1 * self.max_obs_len:]):
-                if os.path.isfile(os.path.join(self.data_dir, folderpath, filename)):  # todo fix for scenes
+            for folderpath, filename in zip(df["scene_folderpath"][obs_sequence_start:obs_sequence_end], df["scene_filename"][obs_sequence_start:obs_sequence_end]):
+                if os.path.isfile(os.path.join(self.data_dir, folderpath, filename)):
                     scenes_images.append(Image.open(os.path.join(self.data_dir, folderpath, filename)))
                     scenes_folderpaths.append(folderpath)
                     scenes_filenames.append(filename)
+        pedestrian_images.append(Image.open(os.path.join(self.data_dir, df["scene_folderpath"][-1], df['scene_filename'][-1])))
+        pedestrian_folderpaths.append(df['scene_folderpath'][-1])
+        pedestrian_filenames.append(df['scene_filename'][-1])
 
         # transform
         pedestrian_images = self.transform(pedestrian_images)
