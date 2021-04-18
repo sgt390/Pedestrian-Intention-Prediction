@@ -38,7 +38,8 @@ logger = logging.getLogger(__name__)
 parser.add_argument('--dataset', default='./datasets/lausanne', type=str)
 parser.add_argument('--loader_num_workers', default=1, type=int)
 parser.add_argument('--timestep', default=30, type=int)
-parser.add_argument('--obs_len', default=8, type=int)
+parser.add_argument('--min_obs_len', default=8, type=int)
+parser.add_argument('--max_obs_len', default=16, type=int)
 
 # Optimization
 parser.add_argument('--batch_size', default=16, type=int)

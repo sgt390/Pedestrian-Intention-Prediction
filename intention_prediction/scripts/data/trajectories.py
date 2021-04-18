@@ -172,8 +172,8 @@ def JAADDataset(data_dir, min_obs_len=10, max_obs_len=10, timestep=1):
         # retain the indices up till pedestrian begins to cross
         ind_temp = list(df_temp.iloc[0:np.min(np.where(df_temp['incrossing'] > 0)) + 1].index.values)
         ind = ind + ind_temp
-        # if(len(ind_temp) >= min_obs_len): # remove when uncommenting below
-        #    ind = ind + ind_temp
+        if len(ind_temp) >= min_obs_len:  # TODO check if it's good (15-4-21)
+           ind = ind + ind_temp
     df = df.iloc[ind].reset_index(drop=True)
     df["unique_id"] = df.groupby(['folderpath']).ngroup()
 
