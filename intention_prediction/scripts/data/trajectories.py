@@ -1,5 +1,4 @@
 import os
-import cv2
 import math
 import glob
 import random
@@ -172,8 +171,8 @@ def JAADDataset(data_dir, min_obs_len=10, max_obs_len=10, timestep=1):
         # retain the indices up till pedestrian begins to cross
         ind_temp = list(df_temp.iloc[0:np.min(np.where(df_temp['incrossing'] > 0)) + 1].index.values)
         ind = ind + ind_temp
-        # if(len(ind_temp) >= min_obs_len): # remove when uncommenting below
-        #    ind = ind + ind_temp
+        if len(ind_temp) >= min_obs_len:  # TODO check if it's good (15-4-21)
+           ind = ind + ind_temp
     df = df.iloc[ind].reset_index(drop=True)
     df["unique_id"] = df.groupby(['folderpath']).ngroup()
 
@@ -261,6 +260,9 @@ class JAADLoader(Dataset):
             self.transform = train_transforms
         if self.dtype == "val":
             self.transform = val_transforms
+        # skipped timesteps between the sequence of images and the image to predict
+        # TODO CUSTOM VALUE!!!!!!!!!!!!!!
+        self.sequence_to_prediction_delay = 8  # in timesteps (e.g. 8 -> 15timesteps*8=120sec delay)
 
     def __len__(self):
         return len(self.df)
@@ -272,10 +274,13 @@ class JAADLoader(Dataset):
         df = self.df.iloc[index]
 
         # load the images, the label, and the relevant filename
-        standing = df["standing"][-1 * self.max_obs_len:]
-        looking = df["looking"][-1 * self.max_obs_len:]
-        walking = df["walking"][-1 * self.max_obs_len:]
-        crossing = df["cross"][-1 * self.max_obs_len:]# df["incrossing"][-1 * self.max_obs_len:]   #TODO testing cross over incrossing
+        obs_sequence_start = (-1 * self.max_obs_len)-self.sequence_to_prediction_delay
+        # else -1 because last frame is added in any case
+        obs_sequence_end = -1 * self.sequence_to_prediction_delay if self.sequence_to_prediction_delay else -1
+        standing = df["standing"][obs_sequence_start: obs_sequence_end]
+        looking = df["looking"][obs_sequence_start: obs_sequence_end]
+        walking = df["walking"][obs_sequence_start: obs_sequence_end]
+        crossing = df["incrossing"][obs_sequence_start: obs_sequence_end]   #TODO testing cross over incrossing
 
         pedestrian_images = []
         scenes_images = []
@@ -283,17 +288,24 @@ class JAADLoader(Dataset):
         pedestrian_filenames = []
         scenes_folderpaths = []
         scenes_filenames = []
-        for folderpath, filename in zip(df["folderpath"][-1 * self.max_obs_len:], df["filename"][-1 * self.max_obs_len:]):
+        for folderpath, filename in zip(df["folderpath"][obs_sequence_start:obs_sequence_end], df["filename"][obs_sequence_start:obs_sequence_end]):
             pedestrian_images.append(Image.open(os.path.join(self.data_dir, folderpath, filename)))
             pedestrian_folderpaths.append(folderpath)
             pedestrian_filenames.append(filename)
+        pedestrian_images.append(Image.open(os.path.join(self.data_dir, df["folderpath"][-1], df['filename'][-1])))
+        pedestrian_folderpaths.append(df['folderpath'][-1])
+        pedestrian_filenames.append(df['filename'][-1])
 
-        if 'scene_folderpath' in df:
-            for folderpath, filename in zip(df["scene_folderpath"][-1 * self.max_obs_len:], df["scene_filename"][-1 * self.max_obs_len:]):
-                if os.path.isfile(os.path.join(self.data_dir, folderpath, filename)):  # todo fix for scenes
-                    scenes_images.append(Image.open(os.path.join(self.data_dir, folderpath, filename)))
-                    scenes_folderpaths.append(folderpath)
-                    scenes_filenames.append(filename)
+        # TODO remake scene_folderpath non-intrusive (bool or empty list - be sure to be full when calling train-scenes)
+        # if 'scene_folderpath' in df:
+        #     for folderpath, filename in zip(df["scene_folderpath"][obs_sequence_start:obs_sequence_end], df["scene_filename"][obs_sequence_start:obs_sequence_end]):
+        #         if os.path.isfile(os.path.join(self.data_dir, folderpath, filename)):
+        #             scenes_images.append(Image.open(os.path.join(self.data_dir, folderpath, filename)))
+        #             scenes_folderpaths.append(folderpath)
+        #             scenes_filenames.append(filename)
+        #     pedestrian_images.append(Image.open(os.path.join(self.data_dir, df["scene_folderpath"][-1], df['scene_filename'][-1])))
+        #     pedestrian_folderpaths.append(df['scene_folderpath'][-1])
+        #     pedestrian_filenames.append(df['scene_filename'][-1])
 
         # transform
         pedestrian_images = self.transform(pedestrian_images)
