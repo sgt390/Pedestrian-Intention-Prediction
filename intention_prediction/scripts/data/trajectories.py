@@ -295,15 +295,16 @@ class JAADLoader(Dataset):
         pedestrian_folderpaths.append(df['folderpath'][-1])
         pedestrian_filenames.append(df['filename'][-1])
 
-        if 'scene_folderpath' in df:
-            for folderpath, filename in zip(df["scene_folderpath"][obs_sequence_start:obs_sequence_end], df["scene_filename"][obs_sequence_start:obs_sequence_end]):
-                if os.path.isfile(os.path.join(self.data_dir, folderpath, filename)):
-                    scenes_images.append(Image.open(os.path.join(self.data_dir, folderpath, filename)))
-                    scenes_folderpaths.append(folderpath)
-                    scenes_filenames.append(filename)
-        pedestrian_images.append(Image.open(os.path.join(self.data_dir, df["scene_folderpath"][-1], df['scene_filename'][-1])))
-        pedestrian_folderpaths.append(df['scene_folderpath'][-1])
-        pedestrian_filenames.append(df['scene_filename'][-1])
+        # TODO remake scene_folderpath non-intrusive (bool or empty list - be sure to be full when calling train-scenes)
+        # if 'scene_folderpath' in df:
+        #     for folderpath, filename in zip(df["scene_folderpath"][obs_sequence_start:obs_sequence_end], df["scene_filename"][obs_sequence_start:obs_sequence_end]):
+        #         if os.path.isfile(os.path.join(self.data_dir, folderpath, filename)):
+        #             scenes_images.append(Image.open(os.path.join(self.data_dir, folderpath, filename)))
+        #             scenes_folderpaths.append(folderpath)
+        #             scenes_filenames.append(filename)
+        #     pedestrian_images.append(Image.open(os.path.join(self.data_dir, df["scene_folderpath"][-1], df['scene_filename'][-1])))
+        #     pedestrian_folderpaths.append(df['scene_folderpath'][-1])
+        #     pedestrian_filenames.append(df['scene_filename'][-1])
 
         # transform
         pedestrian_images = self.transform(pedestrian_images)
