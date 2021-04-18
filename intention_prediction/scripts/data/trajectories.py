@@ -277,10 +277,10 @@ class JAADLoader(Dataset):
         obs_sequence_start = (-1 * self.max_obs_len)-self.sequence_to_prediction_delay
         # else -1 because last frame is added in any case
         obs_sequence_end = -1 * self.sequence_to_prediction_delay if self.sequence_to_prediction_delay else -1
-        standing = df["standing"][obs_sequence_start: obs_sequence_end]
-        looking = df["looking"][obs_sequence_start: obs_sequence_end]
-        walking = df["walking"][obs_sequence_start: obs_sequence_end]
-        crossing = df["incrossing"][obs_sequence_start: obs_sequence_end]   #TODO testing cross over incrossing
+        standing = df["standing"][obs_sequence_start: obs_sequence_end] + [df["standing"][-1]]
+        looking = df["looking"][obs_sequence_start: obs_sequence_end] + [df["looking"][-1]]
+        walking = df["walking"][obs_sequence_start: obs_sequence_end] + [df["walking"][-1]]
+        crossing = df["incrossing"][obs_sequence_start: obs_sequence_end] + [df["incrossing"][-1]]
 
         pedestrian_images = []
         scenes_images = []
