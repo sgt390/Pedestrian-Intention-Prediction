@@ -275,12 +275,11 @@ class JAADLoader(Dataset):
 
         # load the images, the label, and the relevant filename
         obs_sequence_start = (-1 * self.max_obs_len)-self.sequence_to_prediction_delay
-        # else -1 because last frame is added in any case
-        obs_sequence_end = -1 * self.sequence_to_prediction_delay if self.sequence_to_prediction_delay else -1
-        standing = df["standing"][obs_sequence_start: obs_sequence_end] + [df["standing"][-1]]
-        looking = df["looking"][obs_sequence_start: obs_sequence_end] + [df["looking"][-1]]
-        walking = df["walking"][obs_sequence_start: obs_sequence_end] + [df["walking"][-1]]
-        crossing = df["incrossing"][obs_sequence_start: obs_sequence_end] + [df["incrossing"][-1]]
+        obs_sequence_end = -1 * self.sequence_to_prediction_delay if self.sequence_to_prediction_delay else None
+        standing = df["standing"][-1]
+        looking = df["looking"][-1]
+        walking = df["walking"][-1]
+        crossing = df["incrossing"][-1]
 
         pedestrian_images = []
         scenes_images = []
@@ -292,9 +291,6 @@ class JAADLoader(Dataset):
             pedestrian_images.append(Image.open(os.path.join(self.data_dir, folderpath, filename)))
             pedestrian_folderpaths.append(folderpath)
             pedestrian_filenames.append(filename)
-        pedestrian_images.append(Image.open(os.path.join(self.data_dir, df["folderpath"][-1], df['filename'][-1])))
-        pedestrian_folderpaths.append(df['folderpath'][-1])
-        pedestrian_filenames.append(df['filename'][-1])
 
         # TODO remake scene_folderpath non-intrusive (bool or empty list - be sure to be full when calling train-scenes)
         # if 'scene_folderpath' in df:
@@ -303,9 +299,6 @@ class JAADLoader(Dataset):
         #             scenes_images.append(Image.open(os.path.join(self.data_dir, folderpath, filename)))
         #             scenes_folderpaths.append(folderpath)
         #             scenes_filenames.append(filename)
-        #     pedestrian_images.append(Image.open(os.path.join(self.data_dir, df["scene_folderpath"][-1], df['scene_filename'][-1])))
-        #     pedestrian_folderpaths.append(df['scene_folderpath'][-1])
-        #     pedestrian_filenames.append(df['scene_filename'][-1])
 
         # transform
         pedestrian_images = self.transform(pedestrian_images)
@@ -314,7 +307,7 @@ class JAADLoader(Dataset):
             scenes_images = self.transform(scenes_images)  # TODO scene
             scenes_images = torch.stack(scenes_images, 0)
 
-        return [pedestrian_images, standing[-1], looking[-1], walking[-1], crossing[-1], pedestrian_folderpaths, pedestrian_filenames, scenes_images, scenes_folderpaths, scenes_filenames]
+        return [pedestrian_images, standing, looking, walking, crossing, pedestrian_folderpaths, pedestrian_filenames, scenes_images, scenes_folderpaths, scenes_filenames]
     # -------------------------------
 
 

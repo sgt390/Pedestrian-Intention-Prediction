@@ -21,7 +21,7 @@ VAL_SPLIT = 0.2
 drawtrajectories = False
 
 
-def generate_groundtruth(in_xml_filename, in_video_name):
+def generate_groundtruth(in_xml_filename, in_video_name, make_scenes=True):
     foldername = in_video_name.split('.')[0]
     out_annotated_csv = in_xml_filename.split('.')[0] + '.txt'
     df = jaad_to_pd(ALL_ROOT, join(RAW_XML, in_xml_filename), save=False)
@@ -29,7 +29,7 @@ def generate_groundtruth(in_xml_filename, in_video_name):
         df = classify_trajectories(df, save=False)
         df = hungarian(df, 50, 60, save=False)
         df = crop_pedestrians(df, ALL_ROOT, join(RAW_VIDEOS, in_video_name), join(CROPS, foldername), join(ANNOTATIONS, out_annotated_csv), save=False)
-        if df is not None:
+        if df is not None and make_scenes:
             df = scenes(df, ALL_ROOT, join(RAW_VIDEOS, in_video_name), join(SCENES, foldername),
                     join(ANNOTATIONS, out_annotated_csv), save=True)
 
@@ -87,5 +87,5 @@ if __name__ == '__main__':
     files_xml = sorted(os.listdir(join(ALL_ROOT, RAW_XML)))
     files_video = sorted(os.listdir(join(ALL_ROOT, RAW_VIDEOS)))
     for in_xml, in_video in zip(sorted(files_xml), sorted(files_video)):
-        generate_groundtruth(in_xml, in_video)
+        generate_groundtruth(in_xml, in_video, make_scenes=False)
     split_dataset()
