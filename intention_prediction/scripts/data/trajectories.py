@@ -133,7 +133,7 @@ def LausanneDataset(data_dir, min_obs_len=8, max_obs_len=8, timestep=10):
 
 # =============================================================================
 def JAADDataset(data_dir, min_obs_len=10, max_obs_len=10, timestep=1):
-    # debug_op = open("debug_op.txt", "w")
+    debug_op = open("debug_op.txt", "w+")
     # read annotations
     df = pd.DataFrame()
     print("Reading annotations from ", data_dir)
@@ -184,6 +184,7 @@ def JAADDataset(data_dir, min_obs_len=10, max_obs_len=10, timestep=1):
     ind = []
     print(" Processing sequence")
     pbar = tqdm(total=int(df["unique_id"].nunique()))
+    no_removed = 0
     for i in df["unique_id"].unique():
         pbar.update(1)
         ind_temp = []
@@ -203,41 +204,42 @@ def JAADDataset(data_dir, min_obs_len=10, max_obs_len=10, timestep=1):
             ind = ind + ind_temp
             # debug_op.write("Keeping "+str(df_temp["folderpath"].iloc[-1])+" that has been truncated from "+str(df_temp["frame"].max()-df_temp["frame"].min()+1)+" frames to "+str(len(ind_temp))+" frames\n")
         else:
-            pass  # debug_op.write("Removing "+str(df_temp["folderpath"].iloc[-1])+" that has been truncated from "+str(df_temp["frame"].max()-df_temp["frame"].min()+1)+" frames to "+str(len(ind_temp))+" frames\n")
+            no_removed += 1 # debug_op.write("Removing "+str(df_temp["folderpath"].iloc[-1])+" that has been truncated from "+str(df_temp["frame"].max()-df_temp["frame"].min()+1)+" frames to "+str(len(ind_temp))+" frames\n")
     ind = sorted(ind)
     df = df.iloc[ind].reset_index(drop=True)
     df["unique_id"] = df.groupby(['folderpath']).ngroup()
 
     # finalize dataframe
     df = df.groupby("unique_id").agg(lambda x: list(x))
+    debug_op.write(f"Removing {no_removed}\nKeeping {len(df)}")
 
     # optional. for debugging purposes
     # view total number of crossing / non-crossing scenarios
-    # debug_op.write("\n")
+    debug_op.write("\n")
     crossers = 0
     noncrossers = 0
     for i in range(len(df)):
         df_temp = df.iloc[i]
         if df_temp["incrossing"][-1] == 1:
             crossers += 1
-            # debug_op.write("crosser "+str(df_temp["folderpath"][-1])+"\n")
+            debug_op.write("crosser "+str(df_temp["folderpath"][-1])+"\n")
             # debug_op.write("standing "+str(df_temp["standing"][-1*max_obs_len:])+"\n")
             ##debug_op.write("looking "+str(df_temp["looking"][-1*max_obs_len:])+"\n")
             # debug_op.write("walking "+str(df_temp["walking"][-1*max_obs_len:])+"\n")
-            # debug_op.write("crossing "+str(df_temp["incrossing"][-1*max_obs_len:])+"\n")
-            # debug_op.write("\n")
+            debug_op.write("crossing "+str(df_temp["incrossing"][-1*max_obs_len:])+"\n")
+            debug_op.write("\n")
         else:
             noncrossers += 1
-            # debug_op.write("non-crosser "+str(df_temp["folderpath"][-1])+"\n")
+            debug_op.write("non-crosser "+str(df_temp["folderpath"][-1])+"\n")
             # debug_op.write("standing "+str(df_temp["standing"][-1*max_obs_len:])+"\n")
             # debug_op.write("looking "+str(df_temp["looking"][-1*max_obs_len:])+"\n")
             # debug_op.write("walking "+str(df_temp["walking"][-1*max_obs_len:])+"\n")
-            # debug_op.write("crossing "+str(df_temp["incrossing"][-1*max_obs_len:])+"\n")
-            # debug_op.write("\n")
+            debug_op.write("crossing "+str(df_temp["incrossing"][-1*max_obs_len:])+"\n")
+            debug_op.write("\n")
 
-    # debug_op.write("no crossers: "+str(crossers)+"\n")
-    # debug_op.write("no noncrossers: "+str(noncrossers)+"\n")
-    # debug_op.close()
+    debug_op.write("no crossers: "+str(crossers)+"\n")
+    debug_op.write("no noncrossers: "+str(noncrossers)+"\n")
+    debug_op.close()
     print("# crossers: ", crossers)
     print("# noncrossers: ", noncrossers)
     return df

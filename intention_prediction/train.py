@@ -85,6 +85,12 @@ def get_dtypes(args):
 
 
 def main(args):
+
+
+    debug_op = open("debug_op.txt", "w")
+    debug_op.write("\n".join("{!r}: {!r},".format(k, v) for k, v in args.__dict__.items()))
+    debug_op.write('\n')
+    debug_op.close()
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_num
 
     # Build the training set

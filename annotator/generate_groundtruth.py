@@ -28,7 +28,7 @@ def generate_groundtruth(in_xml_filename, in_video_name, make_scenes=True):
     if len(df['frame']) > 0:
         df = classify_trajectories(df, save=False)
         df = hungarian(df, 50, 60, save=False)
-        df = crop_pedestrians(df, ALL_ROOT, join(RAW_VIDEOS, in_video_name), join(CROPS, foldername), join(ANNOTATIONS, out_annotated_csv), save=False)
+        df = crop_pedestrians(df, ALL_ROOT, join(RAW_VIDEOS, in_video_name), join(CROPS, foldername), join(ANNOTATIONS, out_annotated_csv), save=True)
         if df is not None and make_scenes:
             df = scenes(df, ALL_ROOT, join(RAW_VIDEOS, in_video_name), join(SCENES, foldername),
                     join(ANNOTATIONS, out_annotated_csv), save=True)
