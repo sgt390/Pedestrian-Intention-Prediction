@@ -17,7 +17,7 @@ ALL_ROOT = join('dataset', 'all')
 
 TRAIN = join('dataset', 'train')
 VALIDATION = join('dataset', 'val')
-VAL_SPLIT = 0.3 # TODO CHANGE TO 2 WHEN USING MORE FILES!
+VAL_SPLIT = 0.2
 
 drawtrajectories = False
 

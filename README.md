@@ -154,3 +154,5 @@ Run `guidedbackprop_lausanne.ipynb` to get visual results when classifying at ev
 ![Alt Text](/images/guidedbackprop/crossing2.png)
 ![Alt Text](/images/guidedbackprop/notcrossing1.png)
 
+##  wget --no-parent -r http://data.nvision2.eecs.yorku.ca/PIE_dataset/PIE_clips/set02/
+##
