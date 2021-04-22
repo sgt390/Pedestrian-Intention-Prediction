@@ -6,6 +6,7 @@ from annotator.scripts.scenes import scenes
 from os.path import join
 import os
 import shutil
+# on linux use "python3 -m annotator.generate_groundtruth"
 
 RAW_XML = 'raw_annotations'
 RAW_VIDEOS = 'raw'
@@ -16,7 +17,7 @@ ALL_ROOT = join('dataset', 'all')
 
 TRAIN = join('dataset', 'train')
 VALIDATION = join('dataset', 'val')
-VAL_SPLIT = 0.2
+VAL_SPLIT = 0.3 # TODO CHANGE TO 2 WHEN USING MORE FILES!
 
 drawtrajectories = False
 
