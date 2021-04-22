@@ -153,3 +153,4 @@ Run `guidedbackprop_lausanne.ipynb` to get visual results when classifying at ev
 ![Alt Text](/images/guidedbackprop/crossing1.png) 
 ![Alt Text](/images/guidedbackprop/crossing2.png)
 ![Alt Text](/images/guidedbackprop/notcrossing1.png)
+
