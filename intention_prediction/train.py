@@ -54,6 +54,7 @@ parser.add_argument('--dropout', default=0, type=float)
 parser.add_argument('--batch_norm', default=0, type=bool_flag)
 parser.add_argument('--mlp_dim', default=64, type=int)
 parser.add_argument('--learning_rate', default=0.0001, type=float)
+parser.add_argument('--prediction_delay', default=4, type=int)
 
 # Output
 parser.add_argument('--output_dir', default=os.getcwd())
@@ -279,6 +280,14 @@ def main(args):
 
                 break
 
+    ## test
+    print('test...')
+    test_path = os.path.join(checkpoint['args']['dataset'], "test")
+    test_dset, test_loader = data_loader(args, test_path, "val")
+
+    metrics_test = check_accuracy(args, test_loader, classifier, loss_fn)
+    for k, v in sorted(metrics_test.items()):
+        logger.info('  [test] {}: {:.3f}'.format(k, v))
 
 def step(args, batch, classifier, loss_fn, optimizer):
     (pedestrian_crops, _, _, _, decision_true, _, _, _, *_) = batch

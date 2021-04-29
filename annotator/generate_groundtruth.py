@@ -5,6 +5,7 @@ from annotator.scripts.crop_pedestrians import crop_pedestrians
 from annotator.scripts.scenes import scenes
 from os.path import join
 import os
+import math
 import shutil
 # on linux use "python3 -m annotator.generate_groundtruth"
 
@@ -17,7 +18,9 @@ ALL_ROOT = join('dataset', 'all')
 
 TRAIN = join('dataset', 'train')
 VALIDATION = join('dataset', 'val')
+TEST = join('dataset', 'test')
 VAL_SPLIT = 0.2
+TEST_SPLIT = 0.1
 
 drawtrajectories = False
 
@@ -39,10 +42,11 @@ def split_dataset():
     files = sorted(os.listdir(join(ALL_ROOT, ANNOTATIONS)))
     crops = sorted(os.listdir(join(ALL_ROOT, CROPS)))
     scenes = sorted(os.listdir(join(ALL_ROOT, SCENES)))
-    n_val = int(len(files) * VAL_SPLIT)
-    train_files, val_files = files[n_val:], files[:n_val]
-    train_crops, val_crops = crops[n_val:], crops[:n_val]
-    train_scenes, val_scenes = scenes[n_val:], scenes[:n_val]
+    n_val = math.ceil(len(files) * VAL_SPLIT)
+    n_test = len(files) - math.ceil(len(files) * TEST_SPLIT)
+    train_files, val_files, test_files = files[n_val:n_test], files[:n_val], files[n_test:]
+    train_crops, val_crops, test_crops = crops[n_val:n_test], crops[:n_val], crops[n_test:]
+    train_scenes, val_scenes, test_scenes = scenes[n_val:n_test], scenes[:n_val], scenes[n_test:]
 
     if os.path.exists(TRAIN) and os.path.isdir(TRAIN):
         shutil.rmtree(os.path.join(TRAIN), ignore_errors=True)
@@ -58,18 +62,31 @@ def split_dataset():
         os.makedirs(os.path.join(VALIDATION, CROPS))
         os.makedirs(os.path.join(VALIDATION, SCENES))
 
+    if os.path.exists(TEST) and os.path.isdir(TEST):
+        shutil.rmtree(os.path.join(TEST), ignore_errors=True)
+    if not os.path.exists(TEST):
+        os.makedirs(os.path.join(TEST, ANNOTATIONS))
+        os.makedirs(os.path.join(TEST, CROPS))
+        os.makedirs(os.path.join(TEST, SCENES))
+
     for f in train_files:
         shutil.move(join(ALL_ROOT, ANNOTATIONS, f), join(TRAIN, ANNOTATIONS))
     for f in val_files:
         shutil.move(join(ALL_ROOT, ANNOTATIONS, f), join(VALIDATION, ANNOTATIONS))
+    for f in test_files:
+        shutil.move(join(ALL_ROOT, ANNOTATIONS, f), join(TEST, ANNOTATIONS))
     for f in train_crops:
         shutil.move(join(ALL_ROOT, CROPS, f), join(TRAIN, CROPS))
     for f in val_crops:
         shutil.move(join(ALL_ROOT, CROPS, f), join(VALIDATION, CROPS))
+    for f in test_crops:
+        shutil.move(join(ALL_ROOT, CROPS, f), join(TEST, CROPS))
     for f in train_scenes:
         shutil.move(join(ALL_ROOT, SCENES, f), join(TRAIN, SCENES))
     for f in val_scenes:
         shutil.move(join(ALL_ROOT, SCENES, f), join(VALIDATION, SCENES))
+    for f in test_scenes:
+        shutil.move(join(ALL_ROOT, SCENES, f), join(TEST, SCENES))
 
 
 def remove_folder(foldername):

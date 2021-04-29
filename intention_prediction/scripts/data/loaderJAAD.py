@@ -9,7 +9,7 @@ def data_loader(args, path, dtype):
     # build the train set
     if dtype == "train":
         df = JAADDataset(path, args.min_obs_len, args.max_obs_len, args.timestep)
-        dataset = JAADLoader(df, path, dtype, args.max_obs_len)
+        dataset = JAADLoader(df, path, dtype, args.max_obs_len, args.prediction_delay)
         #print(dtype, " has ", neg_sample_size, " negative samples and ", pos_sample_size, " positive samples")
 
         # build the train iterator
@@ -25,7 +25,7 @@ def data_loader(args, path, dtype):
     # validation set should never use the weighted random sampler
     if dtype == "val":
         df = JAADDataset(path, args.min_obs_len, args.max_obs_len, args.timestep)
-        dataset = JAADLoader(df, path, dtype, args.max_obs_len)
+        dataset = JAADLoader(df, path, dtype, args.max_obs_len, args.prediction_delay)
         #print(dtype, " has ", neg_sample_size, " negative samples and ", pos_sample_size, " positive samples")
 
         # build the val iterator

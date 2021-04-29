@@ -248,7 +248,7 @@ def JAADDataset(data_dir, min_obs_len=10, max_obs_len=10, timestep=1):
 # =============================================================================
 class JAADLoader(Dataset):
     def __init__(
-            self, df, data_dir, dtype, max_obs_len=15
+            self, df, data_dir, dtype, max_obs_len=15, prediction_delay=4
     ):
 
         super(JAADLoader, self).__init__()
@@ -264,7 +264,7 @@ class JAADLoader(Dataset):
             self.transform = val_transforms
         # skipped timesteps between the sequence of images and the image to predict
         # TODO CUSTOM VALUE!!!!!!!!!!!!!!
-        self.sequence_to_prediction_delay = 4  # in timesteps (e.g. 8 -> 15timesteps*8=120sec delay)
+        self.prediction_delay = prediction_delay  # in timesteps (e.g. 8 -> 15timesteps*8=120sec delay)
 
     def __len__(self):
         return len(self.df)
@@ -276,8 +276,8 @@ class JAADLoader(Dataset):
         df = self.df.iloc[index]
 
         # load the images, the label, and the relevant filename
-        obs_sequence_start = (-1 * self.max_obs_len)-self.sequence_to_prediction_delay
-        obs_sequence_end = -1 * self.sequence_to_prediction_delay if self.sequence_to_prediction_delay else None
+        obs_sequence_start = (-1 * self.max_obs_len)-self.prediction_delay
+        obs_sequence_end = -1 * self.prediction_delay if self.prediction_delay else None
         standing = df["standing"][-1]
         looking = df["looking"][-1]
         walking = df["walking"][-1]
