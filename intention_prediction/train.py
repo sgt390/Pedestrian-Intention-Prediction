@@ -394,4 +394,7 @@ def cal_l2_losses(pred_traj_gt, pred_traj_gt_rel, pred_traj_fake, pred_traj_fake
 if __name__ == '__main__':
     args = parser.parse_args()
     print(args)
+    if args.min_obs_len < args.max_obs_len+args.prediction_delay:
+        print('changed min_obs_len to fit the prediction_delay + max_obs_len')
+        args.min_obs_len = args.max_obs_len+args.prediction_delay
     main(args)

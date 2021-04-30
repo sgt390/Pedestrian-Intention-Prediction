@@ -263,7 +263,6 @@ class JAADLoader(Dataset):
         if self.dtype == "val":
             self.transform = val_transforms
         # skipped timesteps between the sequence of images and the image to predict
-        # TODO CUSTOM VALUE!!!!!!!!!!!!!!
         self.prediction_delay = prediction_delay  # in timesteps (e.g. 8 -> 15timesteps*8=120sec delay)
 
     def __len__(self):
