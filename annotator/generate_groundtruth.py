@@ -7,6 +7,7 @@ from os.path import join
 import os
 import math
 import shutil
+import numpy as np
 # on linux use "python3 -m annotator.generate_groundtruth"
 
 RAW_XML = 'raw_annotations'
@@ -20,7 +21,7 @@ TRAIN = join('dataset', 'train')
 VALIDATION = join('dataset', 'val')
 TEST = join('dataset', 'test')
 VAL_SPLIT = 0.2
-TEST_SPLIT = 0.0
+TEST_SPLIT = 0.1
 
 drawtrajectories = False
 
@@ -41,33 +42,50 @@ def generate_groundtruth(in_xml_filename, in_video_name, make_scenes=True):
 def split_dataset():
     files = sorted(os.listdir(join(ALL_ROOT, ANNOTATIONS)))
     crops = sorted(os.listdir(join(ALL_ROOT, CROPS)))
-    scenes = sorted(os.listdir(join(ALL_ROOT, SCENES)))
-    n_val = math.ceil(len(files) * VAL_SPLIT)
-    n_test = len(files) - math.ceil(len(files) * TEST_SPLIT)
-    train_files, val_files, test_files = files[n_val:n_test], files[:n_val], files[n_test:]
-    train_crops, val_crops, test_crops = crops[n_val:n_test], crops[:n_val], crops[n_test:]
-    train_scenes, val_scenes, test_scenes = scenes[n_val:n_test], scenes[:n_val], scenes[n_test:]
+    # scenes = sorted(os.listdir(join(ALL_ROOT, SCENES)))
+
+    #Old way to split dataset
+    # n_val = math.ceil(len(files) * VAL_SPLIT)
+    # n_test = len(files) - math.ceil(len(files) * TEST_SPLIT)
+    # train_files, val_files, test_files = files[n_val:n_test], files[:n_val], files[n_test:]
+    # train_crops, val_crops, test_crops = crops[n_val:n_test], crops[:n_val], crops[n_test:]
+    # train_scenes, val_scenes, test_scenes = scenes[n_val:n_test], scenes[:n_val], scenes[n_test:]
+
+    val_ids = np.random.rand(1, len(files)) < VAL_SPLIT
+    test_ids = np.random.rand(1, len(files)) < TEST_SPLIT
+    train_ids = np.array([max(1 - x - y, 0) for x, y in zip(val_ids, test_ids)])
+    train_files = files[train_ids]
+    val_files = files[val_ids]
+    test_files = files[test_ids]
+
+    train_crops = crops[train_ids]
+    val_crops = crops[val_ids]
+    test_crops = crops[test_ids]
+
+    # train_scenes = scenes[train_ids]
+    # val_scenes = scenes[val_ids]
+    # test_scenes = scenes[test_ids]
 
     if os.path.exists(TRAIN) and os.path.isdir(TRAIN):
         shutil.rmtree(os.path.join(TRAIN), ignore_errors=True)
     if not os.path.exists(TRAIN):
         os.makedirs(os.path.join(TRAIN, ANNOTATIONS))
         os.makedirs(os.path.join(TRAIN, CROPS))
-        os.makedirs(os.path.join(TRAIN, SCENES))
+        #os.makedirs(os.path.join(TRAIN, SCENES))
 
     if os.path.exists(VALIDATION) and os.path.isdir(VALIDATION):
         shutil.rmtree(os.path.join(VALIDATION), ignore_errors=True)
     if not os.path.exists(VALIDATION):
         os.makedirs(os.path.join(VALIDATION, ANNOTATIONS))
         os.makedirs(os.path.join(VALIDATION, CROPS))
-        os.makedirs(os.path.join(VALIDATION, SCENES))
+        #os.makedirs(os.path.join(VALIDATION, SCENES))
 
     if os.path.exists(TEST) and os.path.isdir(TEST):
         shutil.rmtree(os.path.join(TEST), ignore_errors=True)
     if not os.path.exists(TEST):
         os.makedirs(os.path.join(TEST, ANNOTATIONS))
         os.makedirs(os.path.join(TEST, CROPS))
-        os.makedirs(os.path.join(TEST, SCENES))
+        #os.makedirs(os.path.join(TEST, SCENES))
 
     for f in train_files:
         shutil.move(join(ALL_ROOT, ANNOTATIONS, f), join(TRAIN, ANNOTATIONS))
@@ -81,12 +99,12 @@ def split_dataset():
         shutil.move(join(ALL_ROOT, CROPS, f), join(VALIDATION, CROPS))
     for f in test_crops:
         shutil.move(join(ALL_ROOT, CROPS, f), join(TEST, CROPS))
-    for f in train_scenes:
-        shutil.move(join(ALL_ROOT, SCENES, f), join(TRAIN, SCENES))
-    for f in val_scenes:
-        shutil.move(join(ALL_ROOT, SCENES, f), join(VALIDATION, SCENES))
-    for f in test_scenes:
-        shutil.move(join(ALL_ROOT, SCENES, f), join(TEST, SCENES))
+    # for f in train_scenes:
+    #     shutil.move(join(ALL_ROOT, SCENES, f), join(TRAIN, SCENES))
+    # for f in val_scenes:
+    #     shutil.move(join(ALL_ROOT, SCENES, f), join(VALIDATION, SCENES))
+    # for f in test_scenes:
+    #     shutil.move(join(ALL_ROOT, SCENES, f), join(TEST, SCENES))
 
 
 def remove_folder(foldername):
