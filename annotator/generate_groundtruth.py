@@ -53,7 +53,7 @@ def split_dataset():
 
     val_ids = np.random.rand(1, len(files)) < VAL_SPLIT
     test_ids = np.random.rand(1, len(files)) < TEST_SPLIT
-    train_ids = np.array([bool(max(1 - x - y, 0)) for x, y in zip(val_ids, test_ids)]).astype(bool)
+    train_ids = np.array([bool(max(1 - x - y, 0)) for x, y in zip(val_ids, test_ids)])
     train_files = files[train_ids]
     val_files = files[val_ids]
     test_files = files[test_ids]
