@@ -40,9 +40,9 @@ def generate_groundtruth(in_xml_filename, in_video_name, make_scenes=True):
 
 
 def split_dataset():
-    files = sorted(os.listdir(join(ALL_ROOT, ANNOTATIONS)))
-    crops = sorted(os.listdir(join(ALL_ROOT, CROPS)))
-    # scenes = sorted(os.listdir(join(ALL_ROOT, SCENES)))
+    files = np.list(sorted(os.listdir(join(ALL_ROOT, ANNOTATIONS))))
+    crops = np.list(sorted(os.listdir(join(ALL_ROOT, CROPS))))
+    # scenes = np.list(sorted(os.listdir(join(ALL_ROOT, SCENES))))
 
     #Old way to split dataset
     # n_val = math.ceil(len(files) * VAL_SPLIT)
@@ -53,7 +53,7 @@ def split_dataset():
 
     val_ids = np.random.rand(1, len(files)) < VAL_SPLIT
     test_ids = np.random.rand(1, len(files)) < TEST_SPLIT
-    train_ids = np.array([bool(max(1 - x - y, 0)) for x, y in zip(val_ids, test_ids)])
+    train_ids = np.array([bool(max(1 - x - y, 0)) for x, y in zip(val_ids, test_ids)]).astype(int)
     train_files = files[train_ids]
     val_files = files[val_ids]
     test_files = files[test_ids]
