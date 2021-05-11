@@ -51,8 +51,8 @@ def split_dataset():
     # train_crops, val_crops, test_crops = crops[n_val:n_test], crops[:n_val], crops[n_test:]
     # train_scenes, val_scenes, test_scenes = scenes[n_val:n_test], scenes[:n_val], scenes[n_test:]
 
-    val_ids = np.random.rand(1, len(files)) < VAL_SPLIT
-    test_ids = np.random.rand(1, len(files)) < TEST_SPLIT
+    val_ids = np.random.rand(1, len(files))[0] < VAL_SPLIT
+    test_ids = np.random.rand(1, len(files))[0] < TEST_SPLIT
     train_ids = np.array([bool(max(1 - x - y, 0)) for x, y in zip(val_ids, test_ids)])
     train_files = files[train_ids]
     val_files = files[val_ids]
