@@ -281,13 +281,13 @@ def main(args):
                 break
 
     ## test
-    print('test...')
-    test_path = os.path.join(checkpoint['args']['dataset'], "test")
-    test_dset, test_loader = data_loader(args, test_path, "val")
-
-    metrics_test = check_accuracy(args, test_loader, classifier, loss_fn)
-    for k, v in sorted(metrics_test.items()):
-        logger.info('  [test] {}: {:.3f}'.format(k, v))
+    # print('test...')
+    # test_path = os.path.join(checkpoint['args']['dataset'], "test")
+    # test_dset, test_loader = data_loader(args, test_path, "val")
+    #
+    # metrics_test = check_accuracy(args, test_loader, classifier, loss_fn)
+    # for k, v in sorted(metrics_test.items()):
+    #     logger.info('  [test] {}: {:.3f}'.format(k, v))
 
 def step(args, batch, classifier, loss_fn, optimizer):
     (pedestrian_crops, _, _, _, decision_true, _, _, _, *_) = batch

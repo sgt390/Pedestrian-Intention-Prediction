@@ -19,8 +19,8 @@ ALL_ROOT = join('dataset', 'all')
 TRAIN = join('dataset', 'train')
 VALIDATION = join('dataset', 'val')
 TEST = join('dataset', 'test')
-VAL_SPLIT = 0.1
-TEST_SPLIT = 0.1
+VAL_SPLIT = 0.2
+TEST_SPLIT = 0.0
 
 drawtrajectories = False
 

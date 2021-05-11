@@ -11,7 +11,7 @@ import pprint
 
 loss_fn = nn.CrossEntropyLoss()
 
-PATH = 'model.pt'
+PATH = 'intention_prediction/models/model_08.pt'
 
 
 def load_model():
